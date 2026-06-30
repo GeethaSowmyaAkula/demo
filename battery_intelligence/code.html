@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>INNOVIBE | Battery Intelligence</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Geist:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Theme Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-container": "#8990a8",
+                    "inverse-primary": "#005ac2",
+                    "on-tertiary-container": "#22293d",
+                    "on-error": "#690005",
+                    "surface-container-lowest": "#010f1f",
+                    "surface-container-low": "#0d1c2d",
+                    "on-secondary": "#003731",
+                    "on-primary": "#002e6a",
+                    "secondary-container": "#04b4a2",
+                    "primary": "#adc6ff",
+                    "surface-container": "#122131",
+                    "surface": "#051424",
+                    "on-error-container": "#ffdad6",
+                    "on-primary-container": "#00285d",
+                    "on-surface-variant": "#c2c6d6",
+                    "tertiary-fixed": "#dae2fd",
+                    "inverse-on-surface": "#233143",
+                    "surface-tint": "#adc6ff",
+                    "inverse-surface": "#d4e4fa",
+                    "primary-container": "#4d8eff",
+                    "on-background": "#d4e4fa",
+                    "on-secondary-fixed": "#00201c",
+                    "on-primary-fixed-variant": "#004395",
+                    "on-tertiary": "#283044",
+                    "secondary": "#4fdbc8",
+                    "on-tertiary-fixed": "#131b2e",
+                    "surface-dim": "#051424",
+                    "primary-fixed": "#d8e2ff",
+                    "secondary-fixed": "#71f8e4",
+                    "on-secondary-fixed-variant": "#005048",
+                    "surface-variant": "#273647",
+                    "on-surface": "#d4e4fa",
+                    "on-primary-fixed": "#001a42",
+                    "secondary-fixed-dim": "#4fdbc8",
+                    "surface-container-high": "#1c2b3c",
+                    "error": "#ffb4ab",
+                    "primary-fixed-dim": "#adc6ff",
+                    "outline": "#8c909f",
+                    "on-tertiary-fixed-variant": "#3f465c",
+                    "surface-container-highest": "#273647",
+                    "tertiary": "#bec6e0",
+                    "outline-variant": "#424754",
+                    "background": "#051424",
+                    "error-container": "#93000a",
+                    "tertiary-fixed-dim": "#bec6e0",
+                    "on-secondary-container": "#003f38",
+                    "surface-bright": "#2c3a4c"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "stack-lg": "24px",
+                    "card-padding": "24px",
+                    "base": "8px",
+                    "stack-sm": "4px",
+                    "margin-page": "40px",
+                    "stack-md": "12px"
+            },
+            "fontFamily": {
+                    "data-display": ["Geist"],
+                    "body-md": ["Inter"],
+                    "label-sm": ["Geist"],
+                    "body-lg": ["Inter"],
+                    "headline-xl": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "label-md": ["Geist"],
+                    "headline-md": ["Inter"]
+            },
+            "fontSize": {
+                    "data-display": ["32px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-xl": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #051424;
+            color: #d4e4fa;
+            -webkit-font-smoothing: antialiased;
+        }
+        .glass-card {
+            background: rgba(39, 54, 71, 0.4);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2);
+        }
+        .cyber-glow {
+            filter: drop-shadow(0 0 8px rgba(79, 219, 200, 0.4));
+        }
+        .battery-cell {
+            transition: all 0.3s ease;
+        }
+        .battery-cell:hover {
+            filter: brightness(1.2) contrast(1.1);
+            transform: scale(1.05);
+        }
+        @keyframes pulse-teal {
+            0% { box-shadow: 0 0 0 0 rgba(79, 219, 200, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(79, 219, 200, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(79, 219, 200, 0); }
+        }
+        .pulse-active {
+            animation: pulse-teal 2s infinite;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="font-body-md text-body-md overflow-x-hidden pb-24">
+<!-- Top App Bar -->
+<header class="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-6 h-20 bg-surface/60 backdrop-blur-[30px] border-b border-white/10">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary cursor-pointer" data-icon="arrow_back">arrow_back</span>
+<div>
+<h1 class="font-headline-md text-headline-md text-primary font-bold tracking-tight">IV-9022-X</h1>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary pulse-active"></span>
+<span class="font-label-sm text-label-sm text-secondary">Charging - Fast</span>
+</div>
+</div>
+</div>
+<button class="w-10 h-10 rounded-full flex items-center justify-center bg-primary-container/10 border border-primary/20 text-primary">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</header>
+<main class="mt-24 px-4 space-y-6">
+<!-- Hero Metrics -->
+<section class="grid grid-cols-2 gap-4">
+<div class="glass-card rounded-xl p-5 flex flex-col items-center justify-center relative overflow-hidden">
+<div class="absolute -right-4 -top-4 w-16 h-16 bg-primary/10 rounded-full blur-2xl"></div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest mb-1">Health (SOH)</span>
+<span class="font-data-display text-data-display text-primary cyber-glow">92%</span>
+<div class="w-full bg-white/5 h-1 mt-4 rounded-full overflow-hidden">
+<div class="bg-primary h-full" style="width: 92%"></div>
+</div>
+</div>
+<div class="glass-card rounded-xl p-5 flex flex-col items-center justify-center relative overflow-hidden">
+<div class="absolute -right-4 -top-4 w-16 h-16 bg-secondary/10 rounded-full blur-2xl"></div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest mb-1">Charge (SOC)</span>
+<span class="font-data-display text-data-display text-secondary cyber-glow">88%</span>
+<div class="w-full bg-white/5 h-1 mt-4 rounded-full overflow-hidden">
+<div class="bg-secondary h-full" style="width: 88%"></div>
+</div>
+</div>
+</section>
+<!-- Battery Pack Schematic -->
+<section class="glass-card rounded-2xl p-6">
+<div class="flex justify-between items-end mb-6">
+<div>
+<h2 class="font-headline-md text-[20px] text-on-surface font-semibold">Cell Voltage Balance</h2>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Live telemetry from 24 modules</p>
+</div>
+<span class="material-symbols-outlined text-secondary" data-icon="grid_view">grid_view</span>
+</div>
+<!-- 2D Schematic Mockup -->
+<div class="grid grid-cols-6 gap-2 aspect-[3/2] bg-surface-container-low p-3 rounded-lg border border-white/5">
+<!-- Generator for cells -->
+<script>
+                    const colors = ['bg-secondary', 'bg-secondary', 'bg-secondary', 'bg-secondary', 'bg-secondary-container', 'bg-secondary'];
+                    for(let i=0; i<24; i++) {
+                        const colorClass = i === 14 ? 'bg-primary' : colors[Math.floor(Math.random() * colors.length)];
+                        const opacity = i === 14 ? 'opacity-100' : 'opacity-60';
+                        document.write(`
+                            <div class="battery-cell ${colorClass} ${opacity} rounded-sm flex items-center justify-center relative group cursor-pointer">
+                                <div class="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                <span class="text-[8px] font-bold text-on-secondary opacity-0 group-hover:opacity-100 transition-opacity">3.8V</span>
+                            </div>
+                        `);
+                    }
+                </script>
+</div>
+<div class="mt-4 flex justify-between items-center">
+<div class="flex gap-4">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="text-[10px] text-on-surface-variant">Optimal</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="text-[10px] text-on-surface-variant">Active Bal.</span>
+</div>
+</div>
+<span class="text-[10px] text-on-surface-variant italic">Avg Temp: 32.4°C</span>
+</div>
+</section>
+<!-- AI Prediction Card -->
+<section class="relative overflow-hidden p-6 rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 to-transparent">
+
+<div class="relative z-10">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-primary" data-icon="psychology">psychology</span>
+<h3 class="font-label-md text-label-md text-primary font-bold uppercase tracking-wider">AI Copilot Analysis</h3>
+</div>
+<div class="space-y-4">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant mb-1">Remaining Useful Life (RUL)</p>
+<p class="font-headline-md text-headline-md text-on-surface">4.2 Years</p>
+</div>
+<div class="flex items-start gap-3 bg-surface/40 p-3 rounded-xl border border-white/5">
+<span class="material-symbols-outlined text-secondary text-[20px] mt-0.5" data-icon="event_repeat">event_repeat</span>
+<p class="text-sm text-on-surface leading-relaxed">Next cell balancing recommended in <span class="text-secondary font-bold">12 days</span> based on current cycle degradation patterns.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Interactive Chart -->
+<section class="glass-card rounded-2xl p-6">
+<div class="flex justify-between items-center mb-6">
+<h2 class="font-label-md text-label-md text-on-surface font-semibold uppercase tracking-widest">Charge Curve</h2>
+<select class="bg-transparent border-none text-[10px] text-primary focus:ring-0 cursor-pointer">
+<option>Last 24h</option>
+<option>Last 7d</option>
+</select>
+</div>
+<div class="h-40 w-full relative flex items-end gap-1">
+<!-- Mock SVG Chart -->
+<svg class="absolute inset-0 w-full h-full" viewbox="0 0 400 150">
+<path d="M0,150 Q50,130 100,100 T200,60 T300,40 T400,20" fill="none" stroke="rgba(173, 198, 255, 0.4)" stroke-width="2"></path>
+<path class="cyber-glow" d="M0,150 Q50,140 100,120 T200,90 T300,80 T400,70" fill="none" stroke="rgba(79, 219, 200, 0.6)" stroke-width="3"></path>
+<!-- Current Point -->
+<circle class="pulse-active" cx="350" cy="45" fill="#4fdbc8" r="4"></circle>
+</svg>
+<div class="absolute bottom-0 w-full flex justify-between text-[8px] text-on-surface-variant pt-2 border-t border-white/5">
+<span>18:00</span>
+<span>22:00</span>
+<span>02:00</span>
+<span>06:00</span>
+<span>Now</span>
+</div>
+</div>
+<div class="mt-8 grid grid-cols-2 gap-4">
+<div class="bg-surface-container p-2 rounded-lg text-center">
+<p class="text-[10px] text-on-surface-variant">Peak Voltage</p>
+<p class="text-sm font-bold text-on-surface">402.4V</p>
+</div>
+<div class="bg-surface-container p-2 rounded-lg text-center">
+<p class="text-[10px] text-on-surface-variant">Energy In</p>
+<p class="text-sm font-bold text-on-surface">14.2 kWh</p>
+</div>
+</div>
+</section>
+<!-- Health Logs -->
+<section class="pb-8">
+<h2 class="font-label-md text-label-md text-on-surface font-semibold uppercase tracking-widest mb-4 px-2">Telematics Timeline</h2>
+<div class="space-y-3">
+<div class="glass-card p-4 rounded-xl flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[20px]" data-icon="bolt">bolt</span>
+</div>
+<div>
+<p class="text-sm font-semibold text-on-surface">Fast Charge Session</p>
+<p class="text-[10px] text-on-surface-variant">Hub #04 • 14:32 PM</p>
+</div>
+</div>
+<span class="text-xs font-bold text-secondary">+22%</span>
+</div>
+<div class="glass-card p-4 rounded-xl flex items-center justify-between border-l-2 border-primary">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]" data-icon="published_with_changes">published_with_changes</span>
+</div>
+<div>
+<p class="text-sm font-semibold text-on-surface">Module Swap</p>
+<p class="text-[10px] text-on-surface-variant">Maintenance Yard • Yesterday</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="glass-card p-4 rounded-xl flex items-center justify-between opacity-60">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-[20px]" data-icon="history">history</span>
+</div>
+<div>
+<p class="text-sm font-semibold text-on-surface">Standard Charge</p>
+<p class="text-[10px] text-on-surface-variant">Home Base • 2 days ago</p>
+</div>
+</div>
+<span class="text-xs font-bold text-on-surface-variant">+68%</span>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 right-0 z-50 h-20 bg-surface/80 backdrop-blur-[30px] flex justify-around items-center px-4 border-t border-white/5">
+<div class="flex flex-col items-center gap-1 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="local_shipping">local_shipping</span>
+<span class="text-[10px] font-medium">Fleet</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-primary">
+<div class="relative">
+<span class="material-symbols-outlined" data-icon="battery_charging_full" style="font-variation-settings: 'FILL' 1;">battery_charging_full</span>
+<div class="absolute -top-1 -right-1 w-2 h-2 bg-secondary rounded-full"></div>
+</div>
+<span class="text-[10px] font-bold">Battery</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="monitor_heart">monitor_heart</span>
+<span class="text-[10px] font-medium">Health</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="text-[10px] font-medium">System</span>
+</div>
+</nav>
+<script>
+        // Micro-interaction for battery cells
+        document.querySelectorAll('.battery-cell').forEach(cell => {
+            cell.addEventListener('click', () => {
+                cell.classList.toggle('ring-2');
+                cell.classList.toggle('ring-white');
+            });
+        });
+
+        // Atmospheric parallax or hover effects could be added here
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const glassCards = document.querySelectorAll('.glass-card');
+            glassCards.forEach((card, index) => {
+                const speed = 0.05 * (index + 1);
+                card.style.transform = `translateY(${scrolled * speed * -1}px)`;
+            });
+        });
+    </script>
+</body></html>

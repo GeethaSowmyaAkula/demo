@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Geist:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-container": "#8990a8",
+                    "inverse-primary": "#005ac2",
+                    "on-tertiary-container": "#22293d",
+                    "on-error": "#690005",
+                    "surface-container-lowest": "#010f1f",
+                    "surface-container-low": "#0d1c2d",
+                    "on-secondary": "#003731",
+                    "on-primary": "#002e6a",
+                    "secondary-container": "#04b4a2",
+                    "primary": "#adc6ff",
+                    "surface-container": "#122131",
+                    "surface": "#051424",
+                    "on-error-container": "#ffdad6",
+                    "on-primary-container": "#00285d",
+                    "on-surface-variant": "#c2c6d6",
+                    "tertiary-fixed": "#dae2fd",
+                    "inverse-on-surface": "#233143",
+                    "surface-tint": "#adc6ff",
+                    "inverse-surface": "#d4e4fa",
+                    "primary-container": "#4d8eff",
+                    "on-background": "#d4e4fa",
+                    "on-secondary-fixed": "#00201c",
+                    "on-primary-fixed-variant": "#004395",
+                    "on-tertiary": "#283044",
+                    "secondary": "#4fdbc8",
+                    "on-tertiary-fixed": "#131b2e",
+                    "surface-dim": "#051424",
+                    "primary-fixed": "#d8e2ff",
+                    "secondary-fixed": "#71f8e4",
+                    "on-secondary-fixed-variant": "#005048",
+                    "surface-variant": "#273647",
+                    "on-surface": "#d4e4fa",
+                    "on-primary-fixed": "#001a42",
+                    "secondary-fixed-dim": "#4fdbc8",
+                    "surface-container-high": "#1c2b3c",
+                    "error": "#ffb4ab",
+                    "primary-fixed-dim": "#adc6ff",
+                    "outline": "#8c909f",
+                    "on-tertiary-fixed-variant": "#3f465c",
+                    "surface-container-highest": "#273647",
+                    "tertiary": "#bec6e0",
+                    "outline-variant": "#424754",
+                    "background": "#051424",
+                    "error-container": "#93000a",
+                    "tertiary-fixed-dim": "#bec6e0",
+                    "on-secondary-container": "#003f38",
+                    "surface-bright": "#2c3a4c"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "stack-lg": "24px",
+                    "card-padding": "24px",
+                    "base": "8px",
+                    "stack-sm": "4px",
+                    "margin-page": "40px",
+                    "stack-md": "12px"
+            },
+            "fontFamily": {
+                    "data-display": ["Geist"],
+                    "body-md": ["Inter"],
+                    "label-sm": ["Geist"],
+                    "body-lg": ["Inter"],
+                    "headline-xl": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "label-md": ["Geist"],
+                    "headline-md": ["Inter"]
+            },
+            "fontSize": {
+                    "data-display": ["32px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-xl": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(5, 20, 36, 0.6);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glow-primary {
+            box-shadow: 0 0 20px rgba(173, 198, 255, 0.15);
+        }
+        .text-glow {
+            text-shadow: 0 0 12px rgba(173, 198, 255, 0.4);
+        }
+        .gauge-pulse {
+            animation: pulse-glow 3s infinite ease-in-out;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { filter: drop-shadow(0 0 8px rgba(79, 219, 200, 0.4)); }
+            50% { filter: drop-shadow(0 0 16px rgba(79, 219, 200, 0.7)); }
+        }
+        .nav-drawer-transition {
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body-md overflow-x-hidden min-h-screen">
+<!-- Navigation Drawer (Predicted Shared Component) -->
+<div class="nav-drawer-transition -translate-x-full lg:translate-x-0 h-screen w-72 fixed left-0 top-0 z-50 flex flex-col glass-panel border-r border-white/10 shadow-[0_0_40px_rgba(173,198,255,0.15)]" id="side-nav">
+<div class="px-6 py-8 flex flex-col gap-2">
+<h1 class="font-data-display text-data-display text-primary tracking-tighter">INNOVIBE</h1>
+<div>
+<p class="font-headline-md text-headline-md text-on-surface">System Administrator</p>
+<p class="font-label-md text-label-md text-on-surface-variant">Fleet Director • Admin</p>
+</div>
+</div>
+<nav class="flex-1 px-2 py-4 space-y-1">
+<!-- Fleet: Active -->
+<a class="flex items-center gap-4 bg-primary-container/20 text-primary border-l-4 border-primary px-6 py-4 scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="local_shipping">local_shipping</span>
+<span class="font-label-md text-label-md">Fleet</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant hover:text-on-surface px-6 py-4 transition-colors hover:bg-surface-variant/50" href="#">
+<span class="material-symbols-outlined" data-icon="battery_charging_full">battery_charging_full</span>
+<span class="font-label-md text-label-md">Battery</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant hover:text-on-surface px-6 py-4 transition-colors hover:bg-surface-variant/50" href="#">
+<span class="material-symbols-outlined" data-icon="monitor_heart">monitor_heart</span>
+<span class="font-label-md text-label-md">Health</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant hover:text-on-surface px-6 py-4 transition-colors hover:bg-surface-variant/50" href="#">
+<span class="material-symbols-outlined" data-icon="psychology">psychology</span>
+<span class="font-label-md text-label-md">AI Copilot</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant hover:text-on-surface px-6 py-4 transition-colors hover:bg-surface-variant/50" href="#">
+<span class="material-symbols-outlined" data-icon="settings_input_component">settings_input_component</span>
+<span class="font-label-md text-label-md">Command Center</span>
+</a>
+<a class="flex items-center gap-4 text-on-surface-variant hover:text-on-surface px-6 py-4 transition-colors hover:bg-surface-variant/50" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</nav>
+<div class="p-6 border-t border-white/5">
+<button class="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-error-container/20 text-error font-label-md">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+                Sign Out
+            </button>
+</div>
+</div>
+<!-- Main Content Area -->
+<main class="lg:ml-72 min-h-screen relative flex flex-col">
+<!-- Top App Bar (Predicted Shared Component) -->
+<header class="fixed top-0 right-0 w-full lg:w-[calc(100%-18rem)] flex justify-between items-center px-6 h-20 z-40 glass-panel border-b border-white/10">
+<div class="flex items-center gap-4">
+<button class="lg:hidden p-2 text-primary hover:bg-primary-container/10 transition-all rounded-full" onclick="toggleNav()">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<div class="flex flex-col">
+<h2 class="font-headline-lg-mobile lg:font-headline-lg text-headline-lg-mobile lg:text-headline-lg text-primary">Command Center</h2>
+<span class="font-label-sm text-label-sm text-secondary-fixed uppercase tracking-widest flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed animate-pulse"></span>
+                        Live System
+                    </span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-primary-container text-on-primary-container font-label-md hover:brightness-110 transition-all">
+<span class="material-symbols-outlined text-[18px]" data-icon="sensors">sensors</span>
+                    Live Mode
+                </button>
+<div class="w-10 h-10 rounded-full bg-surface-variant border border-white/10 flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</div>
+</div>
+</header>
+<!-- Page Content -->
+<div class="mt-20 p-6 space-y-6 max-w-7xl mx-auto w-full">
+<!-- AI Insights Banner -->
+<section class="relative overflow-hidden p-6 rounded-2xl bg-gradient-to-r from-primary-container/30 to-transparent border border-primary/20 flex items-start sm:items-center gap-4 glow-primary">
+<div class="p-3 rounded-xl bg-primary/20 text-primary">
+<span class="material-symbols-outlined" data-icon="psychology">psychology</span>
+</div>
+<div class="flex-1">
+<h4 class="font-headline-md text-headline-md text-primary-fixed mb-1">AI Insights</h4>
+<p class="font-body-md text-on-surface-variant">3 batteries showing early degradation signs. Suggesting preventative cooling maintenance. <span class="text-primary font-semibold">Schedule service?</span></p>
+</div>
+<button class="hidden md:block px-6 py-2 rounded-lg bg-primary text-on-primary font-label-md hover:bg-primary-container transition-all">Review Now</button>
+</section>
+<!-- KPI Grid & Health Gauge -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- KPI Row -->
+<div class="md:col-span-2 grid grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center text-center">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase mb-2">Total Fleet</span>
+<span class="font-data-display text-data-display text-primary text-glow">1,240</span>
+<span class="font-label-md text-label-md text-secondary-fixed mt-2">+4% vs LW</span>
+</div>
+<div class="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center text-center">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase mb-2">Active</span>
+<span class="font-data-display text-data-display text-primary text-glow">982</span>
+<div class="w-full bg-white/5 h-1 rounded-full mt-4">
+<div class="bg-primary h-full w-[79%] rounded-full shadow-[0_0_8px_#adc6ff]"></div>
+</div>
+</div>
+<div class="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center text-center">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase mb-2">Charging</span>
+<span class="font-data-display text-data-display text-secondary-fixed text-glow">154</span>
+<span class="font-label-md text-label-md text-on-surface-variant mt-2">12 Fast-Charge</span>
+</div>
+<div class="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center text-center border-error/20">
+<span class="font-label-sm text-label-sm text-error uppercase mb-2">Issues</span>
+<span class="font-data-display text-data-display text-error text-glow">4</span>
+<span class="font-label-md text-label-md text-error/80 mt-2">Urgent Fixes</span>
+</div>
+</div>
+<!-- Health Gauge -->
+<div class="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center space-y-4">
+<h3 class="font-label-md text-label-md text-on-surface-variant uppercase">Fleet Health Score</h3>
+<div class="relative flex items-center justify-center">
+<!-- SVG Circular Gauge -->
+<svg class="w-40 h-40 transform -rotate-90">
+<circle class="text-white/5" cx="80" cy="80" fill="transparent" r="70" stroke="currentColor" stroke-width="8"></circle>
+<circle class="text-secondary-fixed gauge-pulse" cx="80" cy="80" fill="transparent" r="70" stroke="currentColor" stroke-dasharray="440" stroke-dashoffset="26.4" stroke-linecap="round" stroke-width="10"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="font-data-display text-data-display text-secondary-fixed">94%</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Optimal</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Interactive Map Preview -->
+<section class="glass-panel rounded-2xl overflow-hidden h-96 relative">
+<div class="absolute inset-0 z-0">
+<img class="w-full h-full object-cover opacity-60" data-alt="A futuristic, dark-mode digital map of New Delhi, India. The map features deep obsidian backgrounds and neon electric blue glowing lines for streets and highways. Small, pulsing cyan circular dots represent vehicle clusters, and sleek data visualizations are overlaid with semi-transparent glass textures. The lighting is low-key, emphasizing the high-tech, data-rich monitoring environment." data-location="New Delhi, India" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCt4qywbavhusbmYP7jT7pcrGpJQQbcUU3jQYtzgkga_MT4JlRmYusSDKf7MHhXU6RcifpeDxHVcLfP1gJ5orhzRyT7lNIVjYgXfIWb9L1FRsNWA6aXhQARAvyzBBQjcajtKNb43m3smW6hlstmAmV6mQwevCghuoZ_Pa83oEGOWlYCZmsNB44WaViys4hkk16-z-Ifn2lV12hnXApPrqBvrPnKy5NYTmwg8_hb8tt69cfmBYGL1CSVhKM8eTkbFOG-ofAkzWPhK06T"/>
+</div>
+<!-- Overlay UI -->
+<div class="absolute top-6 left-6 z-10 flex flex-col gap-2">
+<div class="glass-panel px-4 py-2 rounded-lg flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="location_on">location_on</span>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Active Hub</p>
+<p class="font-label-md text-label-md text-on-surface">New Delhi NCR</p>
+</div>
+</div>
+</div>
+<div class="absolute bottom-6 right-6 z-10">
+<button class="bg-primary/90 backdrop-blur-md text-on-primary p-3 rounded-full shadow-xl hover:scale-110 transition-transform">
+<span class="material-symbols-outlined" data-icon="fullscreen">fullscreen</span>
+</button>
+</div>
+<!-- Map Legend -->
+<div class="absolute bottom-6 left-6 z-10 hidden sm:flex gap-4">
+<div class="glass-panel px-3 py-1.5 rounded-full flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="text-[10px] uppercase font-bold tracking-tighter">In Transit</span>
+</div>
+<div class="glass-panel px-3 py-1.5 rounded-full flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary-container"></span>
+<span class="text-[10px] uppercase font-bold tracking-tighter">At Hub</span>
+</div>
+</div>
+</section>
+<!-- Active Trips Section -->
+<section class="space-y-4">
+<div class="flex justify-between items-end">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Active Trips</h3>
+<p class="font-label-md text-label-md text-on-surface-variant">Real-time status of current route executions</p>
+</div>
+<button class="text-primary font-label-md flex items-center gap-1 hover:underline">
+                        View All <span class="material-symbols-outlined text-[18px]" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Trip Card 1 -->
+<div class="glass-panel p-5 rounded-2xl flex flex-col gap-4 border-l-4 border-l-secondary transition-all hover:bg-white/5 cursor-pointer">
+<div class="flex justify-between items-start">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Vehicle ID</span>
+<span class="font-headline-md text-headline-md text-primary">IV-9022-X</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-label-sm text-label-sm text-on-surface-variant">SOC</span>
+<span class="font-headline-md text-headline-md text-secondary-fixed">88%</span>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]" data-icon="near_me">near_me</span>
+<span class="font-body-md text-on-surface">Sector 62, Noida Hub</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]" data-icon="schedule">schedule</span>
+<span class="font-body-md text-on-surface-variant">ETA: <span class="text-on-surface">14:45 (In 12m)</span></span>
+</div>
+</div>
+<div class="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+<div class="bg-secondary h-full w-[82%]"></div>
+</div>
+</div>
+<!-- Trip Card 2 -->
+<div class="glass-panel p-5 rounded-2xl flex flex-col gap-4 border-l-4 border-l-primary-container transition-all hover:bg-white/5 cursor-pointer">
+<div class="flex justify-between items-start">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Vehicle ID</span>
+<span class="font-headline-md text-headline-md text-primary">IV-1144-Z</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-label-sm text-label-sm text-on-surface-variant">SOC</span>
+<span class="font-headline-md text-headline-md text-secondary-fixed">42%</span>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]" data-icon="near_me">near_me</span>
+<span class="font-body-md text-on-surface">Indira Gandhi Airport</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]" data-icon="schedule">schedule</span>
+<span class="font-body-md text-on-surface-variant">ETA: <span class="text-on-surface">15:10 (In 37m)</span></span>
+</div>
+</div>
+<div class="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+<div class="bg-primary-container h-full w-[45%]"></div>
+</div>
+</div>
+<!-- Trip Card 3 -->
+<div class="glass-panel p-5 rounded-2xl flex flex-col gap-4 border-l-4 border-l-error transition-all hover:bg-white/5 cursor-pointer">
+<div class="flex justify-between items-start">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Vehicle ID</span>
+<span class="font-headline-md text-headline-md text-primary">IV-4401-B</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-label-sm text-label-sm text-on-surface-variant text-error">SOC</span>
+<span class="font-headline-md text-headline-md text-error">12%</span>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]" data-icon="near_me">near_me</span>
+<span class="font-body-md text-on-surface">Connaught Place Central</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-error text-[20px]" data-icon="warning">warning</span>
+<span class="font-body-md text-error">Rerouting to nearest Supercharger</span>
+</div>
+</div>
+<div class="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+<div class="bg-error h-full w-[12%]"></div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Mobile Bottom Tab Navigation (Only visible on Mobile) -->
+<div class="lg:hidden fixed bottom-0 left-0 w-full glass-panel h-16 px-6 flex items-center justify-around z-50">
+<button class="text-primary flex flex-col items-center gap-1">
+<span class="material-symbols-outlined" data-icon="grid_view">grid_view</span>
+<span class="text-[10px] font-bold uppercase">Home</span>
+</button>
+<button class="text-on-surface-variant flex flex-col items-center gap-1">
+<span class="material-symbols-outlined" data-icon="local_shipping">local_shipping</span>
+<span class="text-[10px] font-bold uppercase">Fleet</span>
+</button>
+<button class="text-on-surface-variant flex flex-col items-center gap-1">
+<span class="material-symbols-outlined" data-icon="battery_charging_full">battery_charging_full</span>
+<span class="text-[10px] font-bold uppercase">Energy</span>
+</button>
+<button class="text-on-surface-variant flex flex-col items-center gap-1">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+<span class="text-[10px] font-bold uppercase">Profile</span>
+</button>
+</div>
+</main>
+<!-- Overlay for mobile nav -->
+<div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden opacity-0 transition-opacity duration-300" id="nav-overlay" onclick="toggleNav()"></div>
+<script>
+        function toggleNav() {
+            const nav = document.getElementById('side-nav');
+            const overlay = document.getElementById('nav-overlay');
+            
+            if (nav.classList.contains('-translate-x-full')) {
+                nav.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+                setTimeout(() => overlay.classList.add('opacity-100'), 10);
+            } else {
+                nav.</script></body></html>
