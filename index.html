@@ -902,6 +902,7 @@
           console.warn(`Groq key index ${i} error:`, e);
         }
       }
+      throw new Error("All Groq keys failed.");
     }
 
     function saveLocalGroqKey() {
