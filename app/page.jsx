@@ -54,7 +54,7 @@ const ERP_INVOICES = [
 // -------------------------------------------------------------
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [loginRole, setLoginRole] = useState('Super Admin');
+  const [loginRole, setLoginRole] = useState('Admin');
   const [loginEmail, setLoginEmail] = useState('admin@innovibe.in');
   const [loginPassword, setLoginPassword] = useState('password123');
   const [activeTab, setActiveTab] = useState('Dashboard');
@@ -135,9 +135,8 @@ export default function App() {
 
   // Role permissions mapping
   const ROLE_PERMISSIONS = {
-    'Super Admin': ['Dashboard', 'Fleet', 'Drivers', 'Battery', 'Service', 'Inventory', 'Geofencing', 'CRM', 'ERP', 'Copilot', 'DigitalTwin', 'Remote'],
-    'Fleet Admin': ['Dashboard', 'Fleet', 'Drivers', 'Battery', 'Service', 'Inventory', 'Geofencing', 'CRM', 'ERP', 'Copilot', 'DigitalTwin', 'Remote'],
-    'Fleet Manager': ['Dashboard', 'Fleet', 'Drivers', 'Battery', 'Service', 'Inventory', 'Geofencing', 'CRM', 'ERP', 'Copilot', 'DigitalTwin', 'Remote'],
+    'Admin': ['Dashboard', 'Fleet', 'Drivers', 'Battery', 'Service', 'Inventory', 'Geofencing', 'CRM', 'ERP', 'Copilot', 'DigitalTwin', 'Remote'],
+    'Fleet Manager': ['Dashboard', 'Fleet', 'Drivers', 'Battery', 'Service', 'Inventory', 'Geofencing', 'Copilot', 'DigitalTwin'],
     'Driver': ['Drivers', 'Fleet', 'Copilot', 'Remote'],
     'Technician': ['Service', 'Inventory', 'Copilot', 'DigitalTwin'],
     'Customer': ['Fleet', 'CRM', 'ERP'],
@@ -278,8 +277,7 @@ export default function App() {
                   onChange={(e) => setLoginRole(e.target.value)}
                   className="glass-input w-full px-4 py-3 rounded-lg text-sm focus:ring-1 focus:ring-primary"
                 >
-                  <option value="Super Admin">Super Admin (Universal Control)</option>
-                  <option value="Fleet Admin">Fleet Admin</option>
+                  <option value="Admin">Admin (Universal Control)</option>
                   <option value="Fleet Manager">Fleet Manager</option>
                   <option value="Driver">Driver / Operator</option>
                   <option value="Technician">Technician Engineer</option>

@@ -173,8 +173,7 @@
         <div>
           <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Operational Role Domain</label>
           <select id="login-role" class="glass-input w-full px-4 py-3 rounded-lg text-sm">
-            <option value="Super Admin">Super Admin (Universal Control)</option>
-            <option value="Fleet Admin">Fleet Admin</option>
+            <option value="Admin">Admin (Universal Control)</option>
             <option value="Fleet Manager">Fleet Manager</option>
             <option value="Driver">Driver / Operator</option>
             <option value="Technician">Technician Engineer</option>
@@ -805,9 +804,8 @@
       ------------------------------------------------------------- -->
   <script>
     const ROLE_PERMISSIONS = {
-      'Super Admin': ['Dashboard', 'Fleet', 'Drivers', 'Battery', 'Service', 'Inventory', 'Geofencing', 'CRM', 'ERP', 'Copilot', 'DigitalTwin', 'Remote'],
-      'Fleet Admin': ['Dashboard', 'Fleet', 'Drivers', 'Battery', 'Service', 'Inventory', 'Geofencing', 'CRM', 'ERP', 'Copilot', 'DigitalTwin', 'Remote'],
-      'Fleet Manager': ['Dashboard', 'Fleet', 'Drivers', 'Battery', 'Service', 'Inventory', 'Geofencing', 'CRM', 'ERP', 'Copilot', 'DigitalTwin', 'Remote'],
+      'Admin': ['Dashboard', 'Fleet', 'Drivers', 'Battery', 'Service', 'Inventory', 'Geofencing', 'CRM', 'ERP', 'Copilot', 'DigitalTwin', 'Remote'],
+      'Fleet Manager': ['Dashboard', 'Fleet', 'Drivers', 'Battery', 'Service', 'Inventory', 'Geofencing', 'Copilot', 'DigitalTwin'],
       'Driver': ['Drivers', 'Fleet', 'Copilot', 'Remote'],
       'Technician': ['Service', 'Inventory', 'Copilot', 'DigitalTwin'],
       'Customer': ['Fleet', 'CRM', 'ERP'],
@@ -840,7 +838,7 @@
         document.querySelectorAll('.role-content').forEach(el => {
           const isRoleSpecific = el.classList.contains(role.toLowerCase().replace(' ', '-') + '-only');
           const isAdminContent = el.classList.contains('admin-only');
-          const isUserAdmin = ['Super Admin', 'Fleet Admin', 'Fleet Manager', 'Operations Team'].includes(role);
+          const isUserAdmin = ['Admin', 'Operations Team'].includes(role);
           
           if(isRoleSpecific || (isAdminContent && isUserAdmin)) {
             el.classList.remove('hidden');
