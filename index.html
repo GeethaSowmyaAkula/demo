@@ -699,7 +699,18 @@
   <!-- -------------------------------------------------------------
       CLIENT LOGIC SCRIPTS
       ------------------------------------------------------------- -->
-  <script>
+    const ROLE_PERMISSIONS = {
+      'Super Admin': ['Dashboard', 'Fleet', 'Drivers', 'Battery', 'Service', 'Inventory', 'Geofencing', 'CRM', 'ERP', 'Copilot', 'DigitalTwin', 'Remote'],
+      'Fleet Admin': ['Dashboard', 'Fleet', 'Drivers', 'Battery', 'Service', 'Inventory', 'Geofencing', 'CRM', 'ERP', 'Copilot', 'DigitalTwin', 'Remote'],
+      'Fleet Manager': ['Dashboard', 'Fleet', 'Drivers', 'Battery', 'Service', 'Inventory', 'Geofencing', 'CRM', 'ERP', 'Copilot', 'DigitalTwin', 'Remote'],
+      'Driver': ['Drivers', 'Fleet', 'Copilot', 'Remote'],
+      'Technician': ['Service', 'Inventory', 'Copilot', 'DigitalTwin'],
+      'Customer': ['Fleet', 'CRM', 'ERP'],
+      'Operations Team': ['Dashboard', 'Fleet', 'Drivers', 'Service', 'Geofencing', 'Remote'],
+      'Finance Team': ['Dashboard', 'ERP'],
+      'CRM Team': ['CRM', 'Dashboard']
+    };
+
     function handleLogin() {
       const email = document.getElementById('login-email').value;
       const role = document.getElementById('login-role').value;
@@ -708,6 +719,20 @@
         document.getElementById('login-container').classList.add('hidden');
         document.getElementById('app-container').classList.remove('hidden');
         document.getElementById('display-role').innerText = role;
+        
+        // Filter Sidebar Menu based on Selected Role
+        const allowed = ROLE_PERMISSIONS[role] || ['Dashboard'];
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+          const tabId = btn.id.replace('nav-', '');
+          if(allowed.includes(tabId)) {
+            btn.style.display = 'flex';
+          } else {
+            btn.style.display = 'none';
+          }
+        });
+
+        // Auto-route to the first permitted view tab
+        switchTab(allowed[0]);
       }
     }
 

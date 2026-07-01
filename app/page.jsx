@@ -133,11 +133,26 @@ export default function App() {
     return () => clearInterval(interval);
   }, [isLoggedIn, vehicles]);
 
+  // Role permissions mapping
+  const ROLE_PERMISSIONS = {
+    'Super Admin': ['Dashboard', 'Fleet', 'Drivers', 'Battery', 'Service', 'Inventory', 'Geofencing', 'CRM', 'ERP', 'Copilot', 'DigitalTwin', 'Remote'],
+    'Fleet Admin': ['Dashboard', 'Fleet', 'Drivers', 'Battery', 'Service', 'Inventory', 'Geofencing', 'CRM', 'ERP', 'Copilot', 'DigitalTwin', 'Remote'],
+    'Fleet Manager': ['Dashboard', 'Fleet', 'Drivers', 'Battery', 'Service', 'Inventory', 'Geofencing', 'CRM', 'ERP', 'Copilot', 'DigitalTwin', 'Remote'],
+    'Driver': ['Drivers', 'Fleet', 'Copilot', 'Remote'],
+    'Technician': ['Service', 'Inventory', 'Copilot', 'DigitalTwin'],
+    'Customer': ['Fleet', 'CRM', 'ERP'],
+    'Operations Team': ['Dashboard', 'Fleet', 'Drivers', 'Service', 'Geofencing', 'Remote'],
+    'Finance Team': ['Dashboard', 'ERP'],
+    'CRM Team': ['CRM', 'Dashboard']
+  };
+
   // Handle Login
   const handleLogin = (e) => {
     e.preventDefault();
     if (loginEmail && loginPassword) {
       setIsLoggedIn(true);
+      const allowed = ROLE_PERMISSIONS[loginRole] || ['Dashboard'];
+      setActiveTab(allowed[0]);
     }
   };
 
@@ -214,6 +229,8 @@ export default function App() {
     };
     return maps[status] || 'bg-white/10 text-on-surface';
   };
+
+  const allowedTabs = ROLE_PERMISSIONS[loginRole] || ['Dashboard'];
 
   return (
     <div className="flex min-h-screen bg-background font-sans text-on-surface overflow-x-hidden">
@@ -301,105 +318,137 @@ export default function App() {
             </div>
 
             <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-1.5 hide-scrollbar">
-              <p className="text-[10px] font-bold text-on-surface-variant/40 uppercase tracking-widest px-3 mb-2">Analytics & Fleet</p>
-              <button 
-                onClick={() => setActiveTab('Dashboard')}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'Dashboard' ? 'bg-primary-container/20 text-primary border-l-4 border-primary' : 'text-on-surface-variant hover:bg-white/5 hover:text-on-surface'}`}
-              >
-                <span className="material-symbols-outlined">dashboard</span>
-                Dashboard Overview
-              </button>
+              {allowedTabs.includes('Dashboard') && (
+                <button 
+                  onClick={() => setActiveTab('Dashboard')}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'Dashboard' ? 'bg-primary-container/20 text-primary border-l-4 border-primary' : 'text-on-surface-variant hover:bg-white/5 hover:text-on-surface'}`}
+                >
+                  <span className="material-symbols-outlined">dashboard</span>
+                  Dashboard Overview
+                </button>
+              )}
 
-              <button 
-                onClick={() => setActiveTab('Fleet')}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'Fleet' ? 'bg-primary-container/20 text-primary border-l-4 border-primary' : 'text-on-surface-variant hover:bg-white/5 hover:text-on-surface'}`}
-              >
-                <span className="material-symbols-outlined">local_shipping</span>
-                Vehicle Master list
-              </button>
+              {allowedTabs.includes('Fleet') && (
+                <button 
+                  onClick={() => setActiveTab('Fleet')}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'Fleet' ? 'bg-primary-container/20 text-primary border-l-4 border-primary' : 'text-on-surface-variant hover:bg-white/5 hover:text-on-surface'}`}
+                >
+                  <span className="material-symbols-outlined">local_shipping</span>
+                  Vehicle Master list
+                </button>
+              )}
 
-              <button 
-                onClick={() => setActiveTab('Drivers')}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'Drivers' ? 'bg-primary-container/20 text-primary border-l-4 border-primary' : 'text-on-surface-variant hover:bg-white/5 hover:text-on-surface'}`}
-              >
-                <span className="material-symbols-outlined">person_pin</span>
-                Driver Intelligence
-              </button>
+              {allowedTabs.includes('Drivers') && (
+                <button 
+                  onClick={() => setActiveTab('Drivers')}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'Drivers' ? 'bg-primary-container/20 text-primary border-l-4 border-primary' : 'text-on-surface-variant hover:bg-white/5 hover:text-on-surface'}`}
+                >
+                  <span className="material-symbols-outlined">person_pin</span>
+                  Driver Intelligence
+                </button>
+              )}
 
-              <button 
-                onClick={() => setActiveTab('Battery')}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'Battery' ? 'bg-primary-container/20 text-primary border-l-4 border-primary' : 'text-on-surface-variant hover:bg-white/5 hover:text-on-surface'}`}
-              >
-                <span className="material-symbols-outlined">battery_charging_full</span>
-                Battery Intelligence
-              </button>
+              {allowedTabs.includes('Battery') && (
+                <button 
+                  onClick={() => setActiveTab('Battery')}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'Battery' ? 'bg-primary-container/20 text-primary border-l-4 border-primary' : 'text-on-surface-variant hover:bg-white/5 hover:text-on-surface'}`}
+                >
+                  <span className="material-symbols-outlined">battery_charging_full</span>
+                  Battery Intelligence
+                </button>
+              )}
 
-              <p className="text-[10px] font-bold text-on-surface-variant/40 uppercase tracking-widest px-3 pt-4 mb-2">Operations Desk</p>
-              <button 
-                onClick={() => setActiveTab('Service')}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'Service' ? 'bg-primary-container/20 text-primary border-l-4 border-primary' : 'text-on-surface-variant hover:bg-white/5 hover:text-on-surface'}`}
-              >
-                <span className="material-symbols-outlined">build_circle</span>
-                Service tickets
-              </button>
+              {(allowedTabs.includes('Service') || allowedTabs.includes('Inventory') || allowedTabs.includes('Geofencing')) && (
+                <p className="text-[10px] font-bold text-on-surface-variant/40 uppercase tracking-widest px-3 pt-4 mb-2">Operations Desk</p>
+              )}
 
-              <button 
-                onClick={() => setActiveTab('Inventory')}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'Inventory' ? 'bg-primary-container/20 text-primary border-l-4 border-primary' : 'text-on-surface-variant hover:bg-white/5 hover:text-on-surface'}`}
-              >
-                <span className="material-symbols-outlined">inventory_2</span>
-                Parts Inventory
-              </button>
+              {allowedTabs.includes('Service') && (
+                <button 
+                  onClick={() => setActiveTab('Service')}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'Service' ? 'bg-primary-container/20 text-primary border-l-4 border-primary' : 'text-on-surface-variant hover:bg-white/5 hover:text-on-surface'}`}
+                >
+                  <span className="material-symbols-outlined">build_circle</span>
+                  Service tickets
+                </button>
+              )}
 
-              <button 
-                onClick={() => setActiveTab('Geofencing')}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'Geofencing' ? 'bg-primary-container/20 text-primary border-l-4 border-primary' : 'text-on-surface-variant hover:bg-white/5 hover:text-on-surface'}`}
-              >
-                <span className="material-symbols-outlined">fence</span>
-                Geofence Settings
-              </button>
+              {allowedTabs.includes('Inventory') && (
+                <button 
+                  onClick={() => setActiveTab('Inventory')}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'Inventory' ? 'bg-primary-container/20 text-primary border-l-4 border-primary' : 'text-on-surface-variant hover:bg-white/5 hover:text-on-surface'}`}
+                >
+                  <span className="material-symbols-outlined">inventory_2</span>
+                  Parts Inventory
+                </button>
+              )}
 
-              <p className="text-[10px] font-bold text-on-surface-variant/40 uppercase tracking-widest px-3 pt-4 mb-2">Enterprise Modules</p>
-              <button 
-                onClick={() => setActiveTab('CRM')}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'CRM' ? 'bg-primary-container/20 text-primary border-l-4 border-primary' : 'text-on-surface-variant hover:bg-white/5 hover:text-on-surface'}`}
-              >
-                <span className="material-symbols-outlined">groups</span>
-                CRM Pipeline
-              </button>
+              {allowedTabs.includes('Geofencing') && (
+                <button 
+                  onClick={() => setActiveTab('Geofencing')}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'Geofencing' ? 'bg-primary-container/20 text-primary border-l-4 border-primary' : 'text-on-surface-variant hover:bg-white/5 hover:text-on-surface'}`}
+                >
+                  <span className="material-symbols-outlined">fence</span>
+                  Geofence Settings
+                </button>
+              )}
 
-              <button 
-                onClick={() => setActiveTab('ERP')}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'ERP' ? 'bg-primary-container/20 text-primary border-l-4 border-primary' : 'text-on-surface-variant hover:bg-white/5 hover:text-on-surface'}`}
-              >
-                <span className="material-symbols-outlined">account_balance</span>
-                ERP Finance
-              </button>
+              {(allowedTabs.includes('CRM') || allowedTabs.includes('ERP')) && (
+                <p className="text-[10px] font-bold text-on-surface-variant/40 uppercase tracking-widest px-3 pt-4 mb-2">Enterprise Modules</p>
+              )}
 
-              <p className="text-[10px] font-bold text-on-surface-variant/40 uppercase tracking-widest px-3 pt-4 mb-2">AI & Controls</p>
-              <button 
-                onClick={() => setActiveTab('Copilot')}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'Copilot' ? 'bg-primary-container/20 text-primary border-l-4 border-primary' : 'text-on-surface-variant hover:bg-white/5 hover:text-on-surface'}`}
-              >
-                <span className="material-symbols-outlined text-purple-400">psychology</span>
-                NOVA AI Copilot
-              </button>
+              {allowedTabs.includes('CRM') && (
+                <button 
+                  onClick={() => setActiveTab('CRM')}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'CRM' ? 'bg-primary-container/20 text-primary border-l-4 border-primary' : 'text-on-surface-variant hover:bg-white/5 hover:text-on-surface'}`}
+                >
+                  <span className="material-symbols-outlined">groups</span>
+                  CRM Pipeline
+                </button>
+              )}
 
-              <button 
-                onClick={() => setActiveTab('DigitalTwin')}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'DigitalTwin' ? 'bg-primary-container/20 text-primary border-l-4 border-primary' : 'text-on-surface-variant hover:bg-white/5 hover:text-on-surface'}`}
-              >
-                <span className="material-symbols-outlined">view_in_ar</span>
-                Digital Twin Room
-              </button>
+              {allowedTabs.includes('ERP') && (
+                <button 
+                  onClick={() => setActiveTab('ERP')}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'ERP' ? 'bg-primary-container/20 text-primary border-l-4 border-primary' : 'text-on-surface-variant hover:bg-white/5 hover:text-on-surface'}`}
+                >
+                  <span className="material-symbols-outlined">account_balance</span>
+                  ERP Finance
+                </button>
+              )}
 
-              <button 
-                onClick={() => setActiveTab('Remote')}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'Remote' ? 'bg-primary-container/20 text-primary border-l-4 border-primary' : 'text-on-surface-variant hover:bg-white/5 hover:text-on-surface'}`}
-              >
-                <span className="material-symbols-outlined">settings_remote</span>
-                Remote Overrides
-              </button>
+              {(allowedTabs.includes('Copilot') || allowedTabs.includes('DigitalTwin') || allowedTabs.includes('Remote')) && (
+                <p className="text-[10px] font-bold text-on-surface-variant/40 uppercase tracking-widest px-3 pt-4 mb-2">AI & Controls</p>
+              )}
+
+              {allowedTabs.includes('Copilot') && (
+                <button 
+                  onClick={() => setActiveTab('Copilot')}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'Copilot' ? 'bg-primary-container/20 text-primary border-l-4 border-primary' : 'text-on-surface-variant hover:bg-white/5 hover:text-on-surface'}`}
+                >
+                  <span className="material-symbols-outlined text-purple-400">psychology</span>
+                  NOVA AI Copilot
+                </button>
+              )}
+
+              {allowedTabs.includes('DigitalTwin') && (
+                <button 
+                  onClick={() => setActiveTab('DigitalTwin')}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'DigitalTwin' ? 'bg-primary-container/20 text-primary border-l-4 border-primary' : 'text-on-surface-variant hover:bg-white/5 hover:text-on-surface'}`}
+                >
+                  <span className="material-symbols-outlined">view_in_ar</span>
+                  Digital Twin Room
+                </button>
+              )}
+
+              {allowedTabs.includes('Remote') && (
+                <button 
+                  onClick={() => setActiveTab('Remote')}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'Remote' ? 'bg-primary-container/20 text-primary border-l-4 border-primary' : 'text-on-surface-variant hover:bg-white/5 hover:text-on-surface'}`}
+                >
+                  <span className="material-symbols-outlined">settings_remote</span>
+                  Remote Overrides
+                </button>
+              )}
             </nav>
 
             {/* Profile Footer */}
