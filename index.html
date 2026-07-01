@@ -651,13 +651,141 @@
 
         <!-- GEOFENCE TAB -->
         <section id="view-Geofencing" class="view-pane hidden space-y-6">
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div id="geofencing-map" class="lg:col-span-2 rounded-xl border border-white/5 relative overflow-hidden h-[400px] bg-slate-950"></div>
-            <div class="glass-card p-6 rounded-xl space-y-4">
-              <h4 class="font-bold text-sm">Configured Boundaries</h4>
-              <div id="geofence-list" class="space-y-3 max-h-[300px] overflow-y-auto pr-1">
-                <!-- Injected dynamically via JS -->
+          
+          <!-- Geofence Inspector Side Drawer -->
+          <div id="geofence-drawer" class="fixed inset-y-0 right-0 w-[360px] bg-slate-950/95 border-l border-white/10 shadow-2xl z-[1500] p-6 text-white transform translate-x-full transition-transform duration-300 flex flex-col justify-between hidden">
+            <div class="space-y-6">
+              <div class="flex justify-between items-center border-b border-white/10 pb-4">
+                <h4 class="font-bold text-sm text-primary uppercase tracking-wider">Geofence Inspector</h4>
+                <button onclick="closeGeofenceDrawer()" class="text-on-surface-variant hover:text-white">
+                  <span class="material-symbols-outlined text-[18px]">close</span>
+                </button>
               </div>
+              <div id="drawer-content" class="space-y-4 text-xs">
+                <!-- Populated dynamically -->
+              </div>
+            </div>
+            <div class="flex gap-2 pt-4 border-t border-white/10">
+              <button onclick="alert('Edit mode activated')" class="flex-1 py-2 bg-white/5 hover:bg-white/10 text-white font-bold text-xs rounded border border-white/10 transition-colors">Edit</button>
+              <button id="drawer-delete-btn" class="flex-1 py-2 bg-error/10 hover:bg-error/20 text-error font-bold text-xs rounded border border-error/20 transition-colors">Delete</button>
+              <button onclick="alert('History reports loading')" class="flex-1 py-2 bg-primary/20 hover:bg-primary/30 text-primary font-bold text-xs rounded border border-primary/20 transition-colors">History</button>
+            </div>
+          </div>
+
+          <!-- Header metrics -->
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
+            <div class="glass-card p-4 rounded-xl">
+              <span class="text-[9px] font-semibold text-on-surface-variant uppercase tracking-wider">Vehicles Inside</span>
+              <h2 id="counter-inside" class="text-xl font-bold text-primary mt-1">0</h2>
+            </div>
+            <div class="glass-card p-4 rounded-xl">
+              <span class="text-[9px] font-semibold text-on-surface-variant uppercase tracking-wider">Vehicles Outside</span>
+              <h2 id="counter-outside" class="text-xl font-bold text-slate-400 mt-1">18</h2>
+            </div>
+            <div class="glass-card p-4 rounded-xl">
+              <span class="text-[9px] font-semibold text-on-surface-variant uppercase tracking-wider">Today's Entries</span>
+              <h2 id="counter-entries" class="text-xl font-bold text-emerald-500 mt-1">3</h2>
+            </div>
+            <div class="glass-card p-4 rounded-xl">
+              <span class="text-[9px] font-semibold text-on-surface-variant uppercase tracking-wider">Today's Exits</span>
+              <h2 id="counter-exits" class="text-xl font-bold text-blue-400 mt-1">1</h2>
+            </div>
+            <div class="glass-card p-4 rounded-xl border border-error/20">
+              <span class="text-[9px] font-semibold text-error uppercase tracking-wider">Today's Violations</span>
+              <h2 id="counter-violations" class="text-xl font-bold text-error mt-1">1</h2>
+            </div>
+          </div>
+
+          <!-- Main Map & Sidebars -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2 relative h-[400px]">
+              <div id="geofencing-map" class="w-full h-full rounded-xl border border-white/5 bg-slate-950"></div>
+              
+              <!-- Floating Layer Control Overlay inside Map -->
+              <div class="absolute top-4 right-4 z-[1000] glass-card bg-slate-900/90 border border-white/10 p-3 rounded-lg text-[9px] space-y-1.5 max-w-[130px] text-white">
+                <div class="font-bold border-b border-white/5 pb-1 mb-1 uppercase tracking-wider text-primary">Map Layers</div>
+                <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" id="layer-vehicles" checked class="rounded text-primary bg-slate-950 border-white/10 w-3 h-3" /> Live Vehicles</label>
+                <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" id="layer-geofences" checked class="rounded text-primary bg-slate-950 border-white/10 w-3 h-3" /> Geofences</label>
+                <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" id="layer-stations" checked class="rounded text-primary bg-slate-950 border-white/10 w-3 h-3" /> Charging Stations</label>
+                <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" id="layer-centers" checked class="rounded text-primary bg-slate-950 border-white/10 w-3 h-3" /> Service Centers</label>
+                <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" id="layer-traffic" class="rounded text-primary bg-slate-950 border-white/10 w-3 h-3" /> Traffic (mock)</label>
+                <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" id="layer-heatmap" class="rounded text-primary bg-slate-950 border-white/10 w-3 h-3" /> Heatmap (mock)</label>
+              </div>
+
+              <!-- Floating Route history box -->
+              <div id="vehicle-route-float" class="absolute bottom-4 left-4 z-[1000] glass-card bg-slate-900/90 border border-white/10 p-3 rounded-lg text-[9px] text-white max-w-[200px] hidden">
+                <div class="flex justify-between items-center font-bold text-primary border-b border-white/5 pb-1 mb-1">
+                  <span id="route-float-title">Selected Vehicle</span>
+                  <button onclick="clearSelectedRoute()" class="text-on-surface-variant hover:text-white">✕</button>
+                </div>
+                <p>Driver: <span id="route-float-driver">-</span></p>
+                <p>Est Distance: <span id="route-float-dist">-</span> km</p>
+                <p>Status: <span id="route-float-status">-</span></p>
+                <p class="text-[7px] text-secondary mt-1">Dashed path displays route traveled today</p>
+              </div>
+            </div>
+
+            <div class="space-y-6 flex flex-col justify-between h-[400px]">
+              <!-- Configured Boundaries List -->
+              <div class="glass-card p-6 rounded-xl space-y-4 flex-1">
+                <h4 class="font-bold text-sm">Configured Boundaries</h4>
+                <div id="geofence-list" class="space-y-3 max-h-[120px] overflow-y-auto pr-1 hide-scrollbar">
+                  <!-- Injected dynamically -->
+                </div>
+              </div>
+
+              <!-- Live Alerts feed -->
+              <div class="glass-card p-6 rounded-xl space-y-4 h-[180px] flex flex-col">
+                <h4 class="font-bold text-sm text-primary">Live Alerts Feed</h4>
+                <div id="geofence-alerts-feed" class="flex-1 overflow-y-auto space-y-2 pr-1 text-[10px] hide-scrollbar">
+                  <!-- Injected dynamically -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Event history Search & Table -->
+          <div class="glass-card p-6 rounded-xl space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/5 pb-4">
+              <div>
+                <h4 class="font-bold text-sm">Spatial Event History Log</h4>
+                <p class="text-xs text-on-surface-variant">Search and review historic geofence entry/exit durations.</p>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <input 
+                  type="text" 
+                  id="event-search-input"
+                  placeholder="Search vehicle or driver..." 
+                  oninput="filterGeofenceEventsUI()"
+                  class="glass-input px-3 py-1.5 rounded text-xs w-48 bg-slate-900 border border-white/10 text-white"
+                />
+                <select
+                  id="event-fence-select"
+                  onchange="filterGeofenceEventsUI()"
+                  class="glass-input px-3 py-1.5 rounded text-xs bg-slate-900 border border-white/10 text-white"
+                >
+                  <option value="All">All Fences</option>
+                  <!-- Injected dynamically -->
+                </select>
+              </div>
+            </div>
+            <div class="overflow-x-auto text-[11px] max-h-[250px]">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="border-b border-white/5 text-on-surface-variant uppercase tracking-wider text-[9px] font-bold">
+                    <th class="py-2.5 px-3">Time</th>
+                    <th class="py-2.5 px-3">Vehicle</th>
+                    <th class="py-2.5 px-3">Driver</th>
+                    <th class="py-2.5 px-3">Geofence</th>
+                    <th class="py-2.5 px-3">Action</th>
+                    <th class="py-2.5 px-3">Duration</th>
+                    <th class="py-2.5 px-3 font-bold">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="geofence-events-table-body">
+                  <!-- Injected dynamically -->
+                </tbody>
+              </table>
             </div>
           </div>
         </section>
@@ -1402,6 +1530,74 @@
           geofenceLayers[g.id] = circle;
         });
 
+        // Add Charging stations & Service centers
+        const chargingIconG = L.divIcon({
+          className: 'custom-hub-icon',
+          html: `<div class="w-7 h-7 rounded-full bg-emerald-600 border-2 border-white flex items-center justify-center text-white shadow-md text-xs font-bold">🔌</div>`,
+          iconSize: [28, 28]
+        });
+        const serviceIconG = L.divIcon({
+          className: 'custom-service-icon',
+          html: `<div class="w-7 h-7 rounded-full bg-amber-500 border-2 border-white flex items-center justify-center text-white shadow-md text-xs font-bold">🔧</div>`,
+          iconSize: [28, 28]
+        });
+
+        const stationMarkersG = [
+          L.marker([28.5355, 77.3910], {icon: chargingIconG}).bindPopup("Noida Charging Hub"),
+          L.marker([28.6139, 77.2090], {icon: chargingIconG}).bindPopup("Delhi Charging Hub"),
+          L.marker([19.0760, 72.8777], {icon: chargingIconG}).bindPopup("Mumbai Charging Hub")
+        ];
+        stationMarkersG.forEach(m => m.addTo(geofencingMap));
+
+        const centerMarkersG = [
+          L.marker([28.5355, 77.3910], {icon: serviceIconG}).bindPopup("Noida Repair Center"),
+          L.marker([19.0760, 72.8777], {icon: serviceIconG}).bindPopup("Mumbai Maintenance Center")
+        ];
+        centerMarkersG.forEach(m => m.addTo(geofencingMap));
+
+        const showStationsCheck = () => {
+          const checked = document.getElementById('layer-stations') ? document.getElementById('layer-stations').checked : true;
+          stationMarkersG.forEach(m => checked ? m.addTo(geofencingMap) : m.remove());
+        };
+        const showCentersCheck = () => {
+          const checked = document.getElementById('layer-centers') ? document.getElementById('layer-centers').checked : true;
+          centerMarkersG.forEach(m => checked ? m.addTo(geofencingMap) : m.remove());
+        };
+
+        const stationsCheckbox = document.getElementById('layer-stations');
+        const centersCheckbox = document.getElementById('layer-centers');
+        if (stationsCheckbox) stationsCheckbox.addEventListener('change', showStationsCheck);
+        if (centersCheckbox) centersCheckbox.addEventListener('change', showCentersCheck);
+
+        // Add Geofence Vehicles markers
+        geofencingVehicles.forEach(v => {
+          const marker = L.marker([v.lat, v.lng], {
+            icon: L.divIcon({
+              className: 'custom-ev-icon-wrapper',
+              html: `
+                <div class="relative flex items-center justify-center w-8 h-8">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-35 bg-emerald-500"></span>
+                  <div class="relative w-6 h-6 rounded-full flex items-center justify-center border-2 border-white bg-emerald-500 shadow-lg text-white font-black text-[10px]">⚡</div>
+                </div>`,
+              iconSize: [32, 32]
+            })
+          }).addTo(geofencingMap).bindPopup(`
+            <div class="text-xs space-y-1 text-slate-800 min-w-[140px]">
+              <h4 class="font-bold text-slate-900 border-b pb-1 mb-1">${v.id} (${v.model})</h4>
+              <p><strong>Driver:</strong> ${v.driver}</p>
+              <p><strong>Status:</strong> <span class="font-bold">${v.status}</span></p>
+              <p><strong>Speed:</strong> ${v.speed} km/h</p>
+              <p><strong>SoC:</strong> ${v.soc}%</p>
+            </div>
+          `);
+          
+          marker.on('click', () => {
+            selectVehicleRoute(v);
+          });
+
+          geofenceMapMarkers[v.id] = marker;
+        });
+
         // Initialize draw control
         const drawControl = new L.Control.Draw({
           edit: {
@@ -1467,48 +1663,494 @@
         });
 
         renderGeofencesList();
+        renderGeofenceAlerts();
+        filterGeofenceEventsUI();
+        updateGeofencingCounters();
       }
+    }
+
+    let selectedGeofenceId = null;
+    let selectedVehicleId = null;
+    let geofenceEvents = [
+      { id: 'evt-1', time: '17:35:12', vehicle: 'EV-102', driver: 'Aditya Iyer', geofence: 'Noida Industrial Corridor', action: 'Entry', duration: '-', status: 'Nominal' },
+      { id: 'evt-2', time: '17:28:40', vehicle: 'EV-105', driver: 'Ishaan Kapoor', geofence: 'Mumbai Airport Depot', action: 'Exit', duration: '45 mins', status: 'Nominal' },
+      { id: 'evt-3', time: '17:15:02', vehicle: 'EV-108', driver: 'Rohan Das', geofence: 'Noida Industrial Corridor', action: 'Entry', duration: '-', status: 'Overspeed Alert' }
+    ];
+    let geofenceAlerts = [
+      { id: 'alt-1', type: 'Entry', text: 'EV-102 (Aditya Iyer) entered Noida Industrial Corridor', vehicle: 'EV-102', geofence: 'Noida Industrial Corridor', time: '17:35:12' },
+      { id: 'alt-2', type: 'Exit', text: 'EV-105 (Ishaan Kapoor) left Mumbai Airport Depot', vehicle: 'EV-105', geofence: 'Mumbai Airport Depot', time: '17:28:40' },
+      { id: 'alt-3', type: 'Overspeed', text: '⚠ EV-108 (Rohan Das) overspeed inside Noida Corridor (68 km/h)', vehicle: 'EV-108', geofence: 'Noida Industrial Corridor', time: '17:15:02' }
+    ];
+
+    const MOCK_DRIVERS = [
+      'Arjun Mehta', 'Vihaan Patel', 'Aditya Iyer', 'Sai Reddy', 'Ananya Nair',
+      'Ishaan Kapoor', 'Kabir Sen', 'Diya Roy', 'Rohan Das', 'Karan Gupta',
+      'Meera Rao', 'Siddharth Bose', 'Riya Verma', 'Aryan Joshi', 'Neha Singh',
+      'Pranav Saxena', 'Kriti Malhotra', 'Vikram Chaudhary'
+    ];
+
+    // Seed 18 mock geofence vehicles
+    let geofencingVehicles = Array.from({ length: 18 }).map((_, i) => {
+      const statuses = ['Moving', 'Idle', 'Charging', 'Offline', 'Emergency'];
+      const status = statuses[i % 5];
+      const isDelhi = i % 3 === 0;
+      const isMumbai = i % 3 === 1;
+      const lat = isDelhi ? 28.6139 + (Math.random() - 0.5) * 0.08 : (isMumbai ? 19.0760 + (Math.random() - 0.5) * 0.08 : 28.5355 + (Math.random() - 0.5) * 0.08);
+      const lng = isDelhi ? 77.2090 + (Math.random() - 0.5) * 0.08 : (isMumbai ? 72.8777 + (Math.random() - 0.5) * 0.08 : 77.3910 + (Math.random() - 0.5) * 0.08);
+      return {
+        id: `EV-${100 + i}`,
+        model: i % 2 === 0 ? 'Tata Nexon EV Max' : 'Ather 450X',
+        driver: MOCK_DRIVERS[i] || 'Driver Name',
+        status: status,
+        speed: status === 'Moving' ? Math.floor(30 + Math.random() * 45) : (status === 'Emergency' ? Math.floor(65 + Math.random() * 20) : 0),
+        soc: Math.floor(30 + Math.random() * 65),
+        soh: Math.floor(85 + Math.random() * 14),
+        lat: lat,
+        lng: lng,
+        insideFences: [],
+        routeHistory: [[lat, lng]]
+      };
+    });
+
+    let geofenceMapMarkers = {};
+    let routePolyline = null;
+
+    // Haversine Distance helper
+    function getHaversineDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371e3; // meters
+      const phi1 = lat1 * Math.PI / 180;
+      const phi2 = lat2 * Math.PI / 180;
+      const deltaPhi = (lat2 - lat1) * Math.PI / 180;
+      const deltaLambda = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+                Math.cos(phi1) * Math.cos(phi2) *
+                Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
     }
 
     function renderGeofencesList() {
       const container = document.getElementById('geofence-list');
       if (!container) return;
-      container.innerHTML = geofencesData.map(g => `
-        <div class="p-3 bg-surface-container/50 border border-white/5 rounded-lg flex flex-col justify-between">
-          <h5 class="text-xs font-bold text-primary">${g.name}</h5>
-          <div class="flex justify-between text-[10px] text-on-surface-variant mt-2">
-            <span>Type: ${g.type}</span>
-            <span>Vehicles inside: ${g.inside}</span>
+      
+      container.innerHTML = geofencesData.map(g => {
+        const isSelected = selectedGeofenceId === g.id;
+        return `
+          <div 
+            onclick="selectGeofenceRow('${g.id}')"
+            class="p-3 bg-surface-container/50 border rounded-lg cursor-pointer transition-all hover:border-primary/50 flex flex-col justify-between ${isSelected ? 'border-primary bg-primary/5' : 'border-white/5'}"
+          >
+            <div class="flex justify-between items-center">
+              <h5 class="text-xs font-bold text-primary">${g.name}</h5>
+              <span class="material-symbols-outlined text-[14px] text-on-surface-variant">info</span>
+            </div>
+            <div class="flex justify-between text-[10px] text-on-surface-variant mt-2">
+              <span>Type: <span class="capitalize">${g.type}</span></span>
+              <span>Vehicles inside: <span class="font-bold text-white">${g.inside}</span></span>
+            </div>
           </div>
-          <div class="flex justify-between text-[10px] text-error mt-1 font-bold">
-            <span>Violations today: ${g.violations}</span>
-          </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
+
+      // Populate fence select filter too
+      const select = document.getElementById('event-fence-select');
+      if (select) {
+        const currentVal = select.value;
+        select.innerHTML = `<option value="All">All Fences</option>` + 
+          geofencesData.map(g => `<option value="${g.name}">${g.name}</option>`).join('');
+        select.value = currentVal;
+      }
     }
 
-    // Set interval to simulate live updates
-    setInterval(() => {
-      initialVehicles.forEach(v => {
-        if (v.status === 'Active') {
-          v.lat += (Math.random() - 0.5) * 0.005;
-          v.lng += (Math.random() - 0.5) * 0.005;
-          v.speed = Math.floor(30 + Math.random() * 40);
-          
-          if (vehicleMarkers[v.id]) {
-            vehicleMarkers[v.id].setLatLng([v.lat, v.lng]);
-            vehicleMarkers[v.id].getPopup().setContent(`
-              <div class="text-xs space-y-1 text-slate-800">
-                <h4 class="font-bold text-slate-900">${v.id} (${v.model})</h4>
-                <p>Status: ${v.status}</p>
-                <p>SoC: ${v.soc}% | SoH: ${v.soh}%</p>
-                <p>Speed: ${v.speed} km/h</p>
-              </div>
-            `);
+    function selectGeofenceRow(id) {
+      selectedGeofenceId = (selectedGeofenceId === id) ? null : id;
+      renderGeofencesList();
+      highlightGeofence(selectedGeofenceId);
+      
+      if (selectedGeofenceId) {
+        openGeofenceDrawer(selectedGeofenceId);
+      } else {
+        closeGeofenceDrawer();
+      }
+    }
+
+    function highlightGeofence(id) {
+      if (!geofencingMap) return;
+
+      // Reset style for all fences
+      geofencesData.forEach(g => {
+        const layer = geofenceLayers[g.id];
+        if (layer) {
+          const isSel = (g.id === id);
+          layer.setStyle({
+            color: isSel ? '#3b82f6' : '#10b981',
+            weight: isSel ? 4 : 2,
+            fillOpacity: isSel ? 0.22 : 0.1
+          });
+          if (isSel && g.center) {
+            geofencingMap.flyTo(g.center, 13, { animate: true, duration: 1.5 });
           }
         }
       });
-    }, 2000);
+
+      // Update vehicle opacity markers
+      updateVehicleMarkersUI();
+    }
+
+    function updateVehicleMarkersUI() {
+      const activeFence = selectedGeofenceId ? geofencesData.find(g => g.id === selectedGeofenceId) : null;
+      
+      geofencingVehicles.forEach(v => {
+        const marker = geofenceMapMarkers[v.id];
+        if (marker) {
+          let isInside = true;
+          if (activeFence && activeFence.center) {
+            const dist = getHaversineDistance(v.lat, v.lng, activeFence.center[0], activeFence.center[1]);
+            isInside = (dist <= activeFence.radius);
+          }
+          
+          const isDimmed = selectedGeofenceId ? !isInside : false;
+          const statusColors = {
+            Moving: '#10b981',
+            Idle: '#eab308',
+            Charging: '#3b82f6',
+            Offline: '#94a3b8',
+            Emergency: '#ef4444'
+          };
+          const color = statusColors[v.status] || '#10b981';
+          const opacity = isDimmed ? 0.25 : 1.0;
+
+          const iconHTML = `
+            <div class="relative flex items-center justify-center w-8 h-8 transition-all duration-300" style="opacity: ${opacity}">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-35" style="background-color: ${color}"></span>
+              <div class="relative w-6 h-6 rounded-full flex items-center justify-center border-2 border-white shadow-lg text-white font-black text-[10px]" style="background-color: ${color}">
+                ⚡
+              </div>
+            </div>
+          `;
+          
+          marker.setIcon(L.divIcon({
+            className: 'custom-ev-icon-wrapper',
+            html: iconHTML,
+            iconSize: [32, 32]
+          }));
+        }
+      });
+    }
+
+    function openGeofenceDrawer(id) {
+      const drawer = document.getElementById('geofence-drawer');
+      const content = document.getElementById('drawer-content');
+      if (!drawer || !content) return;
+
+      const g = geofencesData.find(fence => fence.id === id);
+      if (!g) return;
+
+      content.innerHTML = `
+        <div>
+          <span class="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold block">Boundary Name</span>
+          <h3 class="text-base font-bold text-white mt-0.5">${g.name}</h3>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <span class="text-[10px] text-on-surface-variant uppercase">Type</span>
+            <p class="font-bold text-secondary capitalize">${g.type}</p>
+          </div>
+          <div>
+            <span class="text-[10px] text-on-surface-variant uppercase">Radius</span>
+            <p class="font-bold text-white">${g.radius ? `${(g.radius / 1000).toFixed(1)} km` : '-'}</p>
+          </div>
+        </div>
+
+        <div class="border-t border-white/5 pt-4 space-y-2">
+          <div class="flex justify-between">
+            <span class="text-on-surface-variant">Live Vehicles Inside:</span>
+            <span class="font-bold text-primary">${g.inside}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-on-surface-variant">Today's Entries:</span>
+            <span class="font-bold text-emerald-500">${geofenceEvents.filter(e => e.geofence === g.name && e.action === 'Entry').length}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-on-surface-variant">Today's Exits:</span>
+            <span class="font-bold text-blue-400">${geofenceEvents.filter(e => e.geofence === g.name && e.action === 'Exit').length}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-on-surface-variant">Today's Violations:</span>
+            <span class="font-bold text-error">${g.violations || 0}</span>
+          </div>
+        </div>
+
+        <div class="border-t border-white/5 pt-4 space-y-1 text-[10px] text-on-surface-variant">
+          <p><strong>Created By:</strong> Fleet Admin</p>
+          <p><strong>Created Date:</strong> 2026-06-30</p>
+        </div>
+      `;
+
+      const deleteBtn = document.getElementById('drawer-delete-btn');
+      if (deleteBtn) {
+        deleteBtn.onclick = () => {
+          const layer = geofenceLayers[id];
+          if (layer && geofencingMap) {
+            geofencingMap.removeLayer(layer);
+          }
+          geofencesData = geofencesData.filter(fence => fence.id !== id);
+          delete geofenceLayers[id];
+          closeGeofenceDrawer();
+          renderGeofencesList();
+        };
+      }
+
+      drawer.classList.remove('hidden');
+      setTimeout(() => drawer.classList.remove('translate-x-full'), 10);
+    }
+
+    function closeGeofenceDrawer() {
+      const drawer = document.getElementById('geofence-drawer');
+      if (!drawer) return;
+      drawer.classList.add('translate-x-full');
+      setTimeout(() => drawer.classList.add('hidden'), 300);
+      selectedGeofenceId = null;
+      renderGeofencesList();
+      highlightGeofence(null);
+    }
+
+    function selectVehicleRoute(v) {
+      selectedVehicleId = v.id;
+      const floatBox = document.getElementById('vehicle-route-float');
+      if (floatBox) {
+        document.getElementById('route-float-title').innerText = `Selected: ${v.id}`;
+        document.getElementById('route-float-driver').innerText = v.driver;
+        document.getElementById('route-float-dist').innerText = (v.routeHistory.length * 0.4).toFixed(1);
+        document.getElementById('route-float-status').innerText = v.status;
+        floatBox.classList.remove('hidden');
+      }
+
+      // Draw dashed path polyline
+      if (routePolyline && geofencingMap) {
+        geofencingMap.removeLayer(routePolyline);
+      }
+      if (geofencingMap) {
+        routePolyline = L.polyline(v.routeHistory, {
+          color: '#6366f1',
+          weight: 4,
+          dashArray: '10, 10',
+          opacity: 0.8
+        }).addTo(geofencingMap);
+      }
+    }
+
+    function clearSelectedRoute() {
+      selectedVehicleId = null;
+      const floatBox = document.getElementById('vehicle-route-float');
+      if (floatBox) floatBox.classList.add('hidden');
+      if (routePolyline && geofencingMap) {
+        geofencingMap.removeLayer(routePolyline);
+        routePolyline = null;
+      }
+    }
+
+    function filterGeofenceEventsUI() {
+      const search = document.getElementById('event-search-input').value.toLowerCase();
+      const selectFence = document.getElementById('event-fence-select').value;
+      const tableBody = document.getElementById('geofence-events-table-body');
+      if (!tableBody) return;
+
+      const filtered = geofenceEvents.filter(evt => {
+        const matchesSearch = evt.vehicle.toLowerCase().includes(search) || evt.driver.toLowerCase().includes(search);
+        const matchesFence = selectFence === 'All' || evt.geofence === selectFence;
+        return matchesSearch && matchesFence;
+      });
+
+      tableBody.innerHTML = filtered.map(evt => `
+        <tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
+          <td class="py-2 px-3 text-on-surface-variant">${evt.time}</td>
+          <td class="py-2 px-3 font-bold text-primary">${evt.vehicle}</td>
+          <td class="py-2 px-3 text-white">${evt.driver}</td>
+          <td class="py-2 px-3 text-secondary">${evt.geofence}</td>
+          <td class="py-2 px-3">
+            <span class="px-1.5 py-0.5 rounded text-[8px] font-bold ${evt.action === 'Entry' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'}">${evt.action}</span>
+          </td>
+          <td class="py-2 px-3 text-on-surface-variant">${evt.duration}</td>
+          <td class="py-2 px-3 font-semibold">
+            <span class="${evt.status === 'Nominal' ? 'text-emerald-500' : 'text-error border border-error/25 px-1 py-0.5 rounded bg-error/5 text-[9px]'}">${evt.status}</span>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderGeofenceAlerts() {
+      const feed = document.getElementById('geofence-alerts-feed');
+      if (!feed) return;
+      feed.innerHTML = geofenceAlerts.map(alert => {
+        const colors = {
+          Entry: 'text-emerald-500',
+          Exit: 'text-blue-400',
+          Overspeed: 'text-error font-bold',
+          Unauthorized: 'text-amber-500 font-bold'
+        };
+        return `
+          <div class="p-2 rounded bg-surface-container/60 border border-white/5 flex flex-col gap-0.5">
+            <div class="flex justify-between items-center">
+              <span class="${colors[alert.type] || 'text-white'}">${alert.type.toUpperCase()}</span>
+              <span class="text-on-surface-variant text-[8px]">${alert.time}</span>
+            </div>
+            <p class="text-white font-medium">${alert.text}</p>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateGeofencingCounters() {
+      const uniqueInside = geofencingVehicles.filter(v => v.insideFences.length > 0).length;
+      const uniqueOutside = geofencingVehicles.length - uniqueInside;
+      const entries = geofenceEvents.filter(e => e.action === 'Entry').length;
+      const exits = geofenceEvents.filter(e => e.action === 'Exit').length;
+      const violations = geofenceEvents.filter(e => e.status !== 'Nominal').length;
+
+      const insideEl = document.getElementById('counter-inside');
+      const outsideEl = document.getElementById('counter-outside');
+      const entriesEl = document.getElementById('counter-entries');
+      const exitsEl = document.getElementById('counter-exits');
+      const violationsEl = document.getElementById('counter-violations');
+
+      if (insideEl) insideEl.innerText = uniqueInside;
+      if (outsideEl) outsideEl.innerText = uniqueOutside;
+      if (entriesEl) entriesEl.innerText = entries;
+      if (exitsEl) exitsEl.innerText = exits;
+      if (violationsEl) violationsEl.innerText = violations;
+    }
+
+    // Coordinates shift and geofence intersections engine inside index.html
+    setInterval(() => {
+      // Toggle checkboxes status check
+      const showVehicles = document.getElementById('layer-vehicles') ? document.getElementById('layer-vehicles').checked : true;
+      const showStations = document.getElementById('layer-stations') ? document.getElementById('layer-stations').checked : true;
+      const showCenters = document.getElementById('layer-centers') ? document.getElementById('layer-centers').checked : true;
+
+      geofencingVehicles.forEach(v => {
+        const marker = geofenceMapMarkers[v.id];
+        if (!marker) return;
+
+        // Hide/Show layers
+        if (!showVehicles) {
+          marker.remove();
+          return;
+        } else if (!geofencingMap.hasLayer(marker)) {
+          marker.addTo(geofencingMap);
+        }
+
+        // Fluctuate position
+        if (v.status === 'Moving' || v.status === 'Emergency') {
+          v.lat += (Math.random() - 0.5) * 0.003;
+          v.lng += (Math.random() - 0.5) * 0.003;
+          if (Math.random() > 0.85) {
+            v.speed = Math.floor(25 + Math.random() * 55);
+          }
+        } else if (v.status === 'Charging') {
+          v.soc = Math.min(100, v.soc + 2);
+          if (v.soc === 100) v.status = 'Idle';
+        } else if (v.status === 'Idle' && Math.random() > 0.95) {
+          v.status = 'Moving';
+          v.speed = Math.floor(30 + Math.random() * 30);
+        }
+
+        v.routeHistory.push([v.lat, v.lng]);
+        if (v.routeHistory.length > 30) v.routeHistory.shift();
+
+        // Update selected route history polyline path
+        if (selectedVehicleId === v.id) {
+          selectVehicleRoute(v);
+        }
+
+        marker.setLatLng([v.lat, v.lng]);
+        
+        // haversine check
+        let currentInside = [];
+        geofencesData.forEach(gf => {
+          if (gf.center && gf.radius) {
+            const dist = getHaversineDistance(v.lat, v.lng, gf.center[0], gf.center[1]);
+            if (dist <= gf.radius) {
+              currentInside.push(gf.name);
+
+              if (!v.insideFences.includes(gf.name)) {
+                const timeStr = new Date().toLocaleTimeString();
+                const eventId = 'evt-' + Math.random().toString(36).substr(2, 9);
+                
+                geofenceEvents.unshift({
+                  id: eventId,
+                  time: timeStr,
+                  vehicle: v.id,
+                  driver: v.driver,
+                  geofence: gf.name,
+                  action: 'Entry',
+                  duration: '-',
+                  status: v.speed > 50 ? 'Overspeed Alert' : 'Nominal'
+                });
+
+                const isUnauthorized = v.id === 'EV-112' || v.id === 'EV-117';
+                const type = isUnauthorized ? 'Unauthorized' : (v.speed > 50 ? 'Overspeed' : 'Entry');
+                const icon = isUnauthorized ? '🟠' : (v.speed > 50 ? '⚠' : '🟢');
+                
+                geofenceAlerts.unshift({
+                  id: 'alt-' + Math.random().toString(36).substr(2, 9),
+                  type: type,
+                  text: isUnauthorized ? `Unauthorized entry: ${v.id} in ${gf.name}` : `${icon} ${v.id} entered ${gf.name}`,
+                  vehicle: v.id,
+                  geofence: gf.name,
+                  time: timeStr
+                });
+
+                gf.inside += 1;
+                if (isUnauthorized || v.speed > 50) {
+                  gf.violations = (gf.violations || 0) + 1;
+                }
+              }
+            }
+          }
+        });
+
+        v.insideFences.forEach(prevFence => {
+          if (!currentInside.includes(prevFence)) {
+            const timeStr = new Date().toLocaleTimeString();
+            const eventId = 'evt-' + Math.random().toString(36).substr(2, 9);
+
+            geofenceEvents.unshift({
+              id: eventId,
+              time: timeStr,
+              vehicle: v.id,
+              driver: v.driver,
+              geofence: prevFence,
+              action: 'Exit',
+              duration: '18 mins',
+              status: 'Nominal'
+            });
+
+            geofenceAlerts.unshift({
+              id: 'alt-' + Math.random().toString(36).substr(2, 9),
+              type: 'Exit',
+              text: `🔴 ${v.id} left ${prevFence}`,
+              vehicle: v.id,
+              geofence: prevFence,
+              time: timeStr
+            });
+
+            const gfObj = geofencesData.find(f => f.name === prevFence);
+            if (gfObj) gfObj.inside = Math.max(0, gfObj.inside - 1);
+          }
+        });
+
+        v.insideFences = currentInside;
+      });
+
+      // Update UI elements
+      updateVehicleMarkersUI();
+      renderGeofencesList();
+      renderGeofenceAlerts();
+      filterGeofenceEventsUI();
+      updateGeofencingCounters();
+    }, 3000);
 
     function sendChatMessage() {
       const input = document.getElementById('chat-input');
