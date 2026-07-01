@@ -1057,8 +1057,9 @@ export default function App() {
                       </div>
                     </div>
                   </div>
-                )
-              )}
+                </div>
+              )
+            )}
 
               {/* -------------------------------------------------------------
                   TAB 4: BATTERY INTELLIGENCE
