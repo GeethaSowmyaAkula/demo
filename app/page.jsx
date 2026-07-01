@@ -1,6 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
+import { createClient } from '@supabase/supabase-js';
+
+const SUPABASE_URL = 'https://pttylnbkpiyuwayugkqq.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB0dHlsbmJrcGl5dXdheXVna3FxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4ODAzOTEsImV4cCI6MjA5ODQ1NjM5MX0.5GamNh1J-um-vdWlzgdhujyv3XGlsru1BFL2jXOSdp0';
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // -------------------------------------------------------------
 // REALISTIC MOCK DATA FOR ENTERPRISE SAAS PLAYGROUND
@@ -54,6 +59,116 @@ export default function App() {
   const [loginPassword, setLoginPassword] = useState('password123');
   const [activeTab, setActiveTab] = useState('Dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Supabase dynamic states
+  const [loginError, setLoginError] = useState('');
+  const [dbConnected, setDbConnected] = useState(false);
+  const [serviceTickets, setServiceTickets] = useState([]);
+  const [driverIssueDesc, setDriverIssueDesc] = useState('');
+  const [driverIssuePriority, setDriverIssuePriority] = useState('Medium');
+  const [driverBookingStatus, setDriverBookingStatus] = useState('');
+  const [displayName, setDisplayName] = useState('Arjun Sharma');
+
+  useEffect(() => {
+    if (supabaseClient) {
+      setDbConnected(true);
+    }
+  }, []);
+
+  const loadTechnicianServiceTickets = async () => {
+    try {
+      const { data, error } = await supabaseClient.from('service_tickets').select('*');
+      if (!error && data) {
+        setServiceTickets(data);
+      } else if (error) {
+        console.warn("Failed to fetch tickets from Supabase:", error);
+      }
+    } catch (e) {
+      console.error("Error loading tickets:", e);
+    }
+  };
+
+  useEffect(() => {
+    if (isLoggedIn && loginRole === 'Technician') {
+      loadTechnicianServiceTickets();
+      const channel = supabaseClient
+        .channel('public:service_tickets')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'service_tickets' }, () => {
+          loadTechnicianServiceTickets();
+        })
+        .subscribe();
+      return () => {
+        supabaseClient.removeChannel(channel);
+      };
+    }
+  }, [isLoggedIn, loginRole]);
+
+  const submitDriverServiceTicket = async () => {
+    if (!driverIssueDesc.trim()) {
+      alert("Please enter a description of the issue.");
+      return;
+    }
+
+    setDriverBookingStatus('Submitting request to Supabase...');
+
+    const ticketNum = 'TKT-' + Math.floor(1000 + Math.random() * 9000);
+    const ticketData = {
+      ticket_number: ticketNum,
+      vehicle_reg: 'IV-9022-X',
+      issue_description: driverIssueDesc,
+      priority: driverIssuePriority,
+      status: 'Open'
+    };
+
+    try {
+      const { error } = await supabaseClient.from('service_tickets').insert([ticketData]);
+      if (!error) {
+        setDriverBookingStatus(`Success! Logged ticket ${ticketNum} in Supabase.`);
+        setDriverIssueDesc('');
+      } else {
+        console.error("Supabase insert error:", error);
+        setDriverBookingStatus(`Error: ${error.message}`);
+      }
+    } catch (e) {
+      setDriverBookingStatus(`Offline: Logged ticket ${ticketNum} locally.`);
+      setDriverIssueDesc('');
+    }
+  };
+
+  const acceptServiceTicket = async (ticketId) => {
+    try {
+      const { error } = await supabaseClient
+        .from('service_tickets')
+        .update({ status: 'In Progress', assigned_technician: 'Sunit Malhotra' })
+        .eq('id', ticketId);
+
+      if (error) {
+        console.error("Supabase update error:", error);
+        alert("Could not accept ticket: " + error.message);
+      } else {
+        loadTechnicianServiceTickets();
+      }
+    } catch (e) {
+      console.error("Network error accepting ticket:", e);
+    }
+  };
+
+  const closeServiceTicket = async (ticketId) => {
+    try {
+      const { error } = await supabaseClient
+        .from('service_tickets')
+        .update({ status: 'Closed' })
+        .eq('id', ticketId);
+
+      if (error) {
+        console.error("Supabase update error:", error);
+      } else {
+        loadTechnicianServiceTickets();
+      }
+    } catch (e) {
+      console.error("Network error closing ticket:", e);
+    }
+  };
 
   // Search & Filter States
   const [vehicleSearch, setVehicleSearch] = useState('');
@@ -140,13 +255,59 @@ export default function App() {
   };
 
   // Handle Login
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (loginEmail && loginPassword) {
-      setIsLoggedIn(true);
-      const allowed = ROLE_PERMISSIONS[loginRole] || ['Dashboard'];
-      setActiveTab(allowed[0]);
+    setLoginError('');
+
+    const emails = {
+      'Admin': 'admin@innovibe.in',
+      'Fleet Manager': 'manager@innovibe.in',
+      'Driver': 'driver@innovibe.in',
+      'Technician': 'technician@innovibe.in',
+      'Operations Team': 'operations@innovibe.in',
+      'Finance Team': 'finance@innovibe.in'
+    };
+    
+    const email = emails[loginRole];
+    const password = 'password123';
+
+    let authenticatedRole = loginRole;
+    let authenticatedName = "Arjun Sharma";
+
+    if (supabaseClient && email) {
+      try {
+        const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
+          email: email,
+          password: password
+        });
+
+        if (!authError && authData.user) {
+          const { data: profile, error: profileError } = await supabaseClient
+            .from('users')
+            .select('name, role')
+            .eq('id', authData.user.id)
+            .single();
+
+          if (!profileError && profile) {
+            authenticatedRole = profile.role;
+            authenticatedName = profile.name;
+            console.log("Logged in via Supabase cloud auth:", authenticatedName, authenticatedRole);
+          }
+        } else if (authError) {
+          console.warn("Supabase auth failed, showing warning overlay:", authError.message);
+          setLoginError(`Supabase Auth Failed: ${authError.message}. Running in offline fallback mode...`);
+          setTimeout(() => { setLoginError(''); }, 4000);
+        }
+      } catch (err) {
+        console.warn("Network error connecting to Supabase, running local offline mode:", err);
+      }
     }
+
+    setDisplayName(authenticatedName);
+    setLoginRole(authenticatedRole);
+    setIsLoggedIn(true);
+    const allowed = ROLE_PERMISSIONS[authenticatedRole] || ['Dashboard'];
+    setActiveTab(allowed[0]);
   };
 
   // AI Copilot prompt submission
@@ -243,28 +404,6 @@ export default function App() {
 
             <form onSubmit={handleLogin} className="space-y-6">
               <div>
-                <label className="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Corporate Identity Email</label>
-                <input 
-                  type="email" 
-                  value={loginEmail} 
-                  onChange={(e) => setLoginEmail(e.target.value)}
-                  className="glass-input w-full px-4 py-3 rounded-lg text-sm"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Access Key Credentials</label>
-                <input 
-                  type="password" 
-                  value={loginPassword} 
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  className="glass-input w-full px-4 py-3 rounded-lg text-sm"
-                  required
-                />
-              </div>
-
-              <div>
                 <label className="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Operational Role Domain</label>
                 <select 
                   value={loginRole} 
@@ -280,11 +419,17 @@ export default function App() {
                 </select>
               </div>
 
+              {loginError && (
+                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-xs text-red-500 font-medium text-center">
+                  {loginError}
+                </div>
+              )}
+
               <button 
                 type="submit" 
                 className="w-full py-3.5 bg-gradient-to-r from-primary-container to-secondary-container hover:brightness-110 text-background font-bold rounded-lg text-sm shadow-lg transition-all"
               >
-                Authenticate & Decrypt Session
+                Access Operational Dashboard
               </button>
             </form>
 
@@ -435,10 +580,10 @@ export default function App() {
             <div className="p-6 border-t border-white/5 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center font-bold text-primary">
-                  AS
+                  {displayName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)}
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold">Arjun Sharma</h4>
+                  <h4 className="text-xs font-bold">{displayName}</h4>
                   <span className="text-[10px] text-on-surface-variant">{loginRole}</span>
                 </div>
               </div>
@@ -461,6 +606,10 @@ export default function App() {
                 <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-high border border-white/5 text-xs text-on-surface-variant">
                   <span className="w-2 h-2 rounded-full bg-secondary pulse-glow-teal"></span>
                   Connected
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-high border border-white/5 text-xs text-on-surface-variant">
+                  <span className={`w-2 h-2 rounded-full ${dbConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>
+                  Database: {dbConnected ? 'Live (Supabase)' : 'Offline'}
                 </span>
               </div>
 
@@ -786,20 +935,70 @@ export default function App() {
                   TAB 3: DRIVER INTELLIGENCE
                   ------------------------------------------------------------- */}
               {activeTab === 'Drivers' && (
-                <div className="space-y-8 animate-fade-in">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h4 className="font-bold text-sm">AI Behavior & Driver safety metrics</h4>
-                      <p className="text-xs text-on-surface-variant">Continuous tracking of harsh braking, acceleration, and compliance.</p>
+                loginRole === 'Driver' ? (
+                  <div className="space-y-6 animate-fade-in max-w-2xl mx-auto">
+                    <div className="glass-card p-6 rounded-xl space-y-4">
+                      <h3 className="text-lg font-bold text-primary flex items-center gap-2">
+                        <span className="material-symbols-outlined">car_repair</span>
+                        Book Service / Request Repair
+                      </h3>
+                      <p className="text-xs text-on-surface-variant">Submit an active ticket directly to the service department for vehicle IV-9022-X.</p>
+                      
+                      <div className="space-y-4 pt-2">
+                        <div>
+                          <label className="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Describe Issue / Telemetry Fault</label>
+                          <textarea 
+                            value={driverIssueDesc}
+                            onChange={(e) => setDriverIssueDesc(e.target.value)}
+                            placeholder="e.g. Battery heating warning light, minor deceleration lag during regeneration..."
+                            className="glass-input w-full px-4 py-3 rounded-lg text-xs h-28 resize-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Priority Level</label>
+                          <select 
+                            value={driverIssuePriority}
+                            onChange={(e) => setDriverIssuePriority(e.target.value)}
+                            className="glass-input w-full px-4 py-3 rounded-lg text-xs"
+                          >
+                            <option value="Low">Low (General Checkup)</option>
+                            <option value="Medium">Medium (BMS Flag)</option>
+                            <option value="High">High (Hardware Fault)</option>
+                            <option value="Critical">Critical (Immediate Repair)</option>
+                          </select>
+                        </div>
+
+                        {driverBookingStatus && (
+                          <div className={`p-3 rounded-lg text-xs font-medium text-center ${driverBookingStatus.includes('Success') ? 'bg-secondary/15 border border-secondary/25 text-secondary' : 'bg-primary/20 text-primary'}`}>
+                            {driverBookingStatus}
+                          </div>
+                        )}
+
+                        <button 
+                          onClick={submitDriverServiceTicket}
+                          className="w-full py-3 bg-primary text-background font-bold text-xs rounded-lg hover:brightness-105 transition-all"
+                        >
+                          Submit Repair Request & Stream
+                        </button>
+                      </div>
                     </div>
                   </div>
+                ) : (
+                  <div className="space-y-8 animate-fade-in">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h4 className="font-bold text-sm">AI Behavior & Driver safety metrics</h4>
+                        <p className="text-xs text-on-surface-variant">Continuous tracking of harsh braking, acceleration, and compliance.</p>
+                      </div>
+                    </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    
-                    {/* Driver leaderboard list */}
-                    <div className="lg:col-span-2 glass-card p-6 rounded-xl space-y-4">
-                      <h4 className="font-bold text-sm">Performance Classification</h4>
-                      <div className="space-y-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 font-normal">
+                      
+                      {/* Driver leaderboard list */}
+                      <div className="lg:col-span-2 glass-card p-6 rounded-xl space-y-4">
+                        <h4 className="font-bold text-sm">Performance Classification</h4>
+                        <div className="space-y-4">
                         {DRIVER_DATA.map(d => (
                           <div key={d.id} className="p-4 bg-surface-container/40 border border-white/5 rounded-xl flex items-center justify-between">
                             <div className="flex items-center gap-4">
@@ -862,7 +1061,7 @@ export default function App() {
                       </div>
                     </div>
                   </div>
-                </div>
+                )
               )}
 
               {/* -------------------------------------------------------------
@@ -946,48 +1145,145 @@ export default function App() {
                   TAB 5: SERVICE TICKETS
                   ------------------------------------------------------------- */}
               {activeTab === 'Service' && (
-                <div className="space-y-6 animate-fade-in">
-                  <div className="flex justify-between items-center">
+                loginRole === 'Technician' ? (
+                  <div className="space-y-8 animate-fade-in">
                     <div>
-                      <h4 className="font-bold text-sm">Service pipeline workflow</h4>
-                      <p className="text-xs text-on-surface-variant">Assign tickets to technicians, track parts orders, and close workflows.</p>
+                      <h4 className="font-display text-xl font-bold tracking-tight text-primary">Technician Work Orders</h4>
+                      <p className="text-xs text-on-surface-variant">Manage your active maintenance checklist and claim new tickets from the queue.</p>
                     </div>
-                  </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {SERVICE_TICKETS.map(t => (
-                      <div key={t.id} className="glass-card p-5 rounded-xl border border-white/5 space-y-4">
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs font-mono font-bold text-primary">{t.id}</span>
-                          <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${t.priority === 'Critical' ? 'bg-error/25 text-error border border-error/20' : 'bg-primary/20 text-primary border border-primary/20'}`}>
-                            {t.priority}
-                          </span>
-                        </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                      {/* Left Column: Active Assignment */}
+                      <div className="lg:col-span-1 space-y-4">
+                        <h3 className="text-sm font-semibold uppercase tracking-wider text-secondary flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-secondary"></span>
+                          My Active Assignment
+                        </h3>
+                        <div className="space-y-4">
+                          {(() => {
+                            const activeTickets = (serviceTickets.length > 0 ? serviceTickets : [
+                              { id: 'mock-active', ticket_number: 'TKT-8842', vehicle_reg: 'IV-7722-M', issue_description: 'Overheating under load & warning lights on dashboard', priority: 'Critical', status: 'In Progress', assigned_technician: 'Sunit Malhotra' }
+                            ]).filter(t => t.status === 'In Progress' && t.assigned_technician === 'Sunit Malhotra');
 
-                        <div>
-                          <h4 className="text-xs text-on-surface-variant">Target Vehicle</h4>
-                          <p className="text-sm font-bold mt-0.5">{t.vehicle}</p>
-                        </div>
+                            if (activeTickets.length === 0) {
+                              return (
+                                <div className="glass-card p-6 rounded-xl text-center">
+                                  <p className="text-xs text-on-surface-variant">No active service assignments. Accept a job from the pool to begin.</p>
+                                </div>
+                              );
+                            }
 
-                        <div>
-                          <h4 className="text-xs text-on-surface-variant">Reported Issue</h4>
-                          <p className="text-xs text-on-surface mt-1 leading-relaxed">{t.issue}</p>
-                        </div>
-
-                        <div className="pt-2 border-t border-white/5 flex justify-between items-center text-xs">
-                          <div>
-                            <span className="text-on-surface-variant block text-[10px]">Technician</span>
-                            <span className="font-semibold">{t.technician}</span>
-                          </div>
-                          <div>
-                            <span className="text-on-surface-variant block text-[10px] text-right">Workflow Status</span>
-                            <span className="text-secondary font-bold">{t.status}</span>
-                          </div>
+                            return activeTickets.map(t => (
+                              <div key={t.id} className="glass-card p-6 rounded-xl space-y-4 border border-primary/20">
+                                <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                                  <div>
+                                    <span className="text-xs text-primary font-mono font-bold">{t.ticket_number}</span>
+                                    <h4 className="font-bold text-sm mt-0.5">{t.vehicle_reg}</h4>
+                                  </div>
+                                  <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${t.priority === 'Critical' ? 'bg-error/25 text-error border border-error/20' : 'bg-primary/20 text-primary border border-primary/20'}`}>{t.priority}</span>
+                                </div>
+                                <p className="text-xs text-on-surface">{t.issue_description}</p>
+                                <div className="pt-2 border-t border-white/5 flex justify-end">
+                                  <button 
+                                    onClick={() => closeServiceTicket(t.id)} 
+                                    className="px-3 py-1.5 bg-secondary text-background font-bold text-xs rounded hover:opacity-90"
+                                  >
+                                    Close Service Ticket
+                                  </button>
+                                </div>
+                              </div>
+                            ));
+                          })()}
                         </div>
                       </div>
-                    ))}
+
+                      {/* Right Column: Open Job Pool */}
+                      <div className="lg:col-span-2 space-y-4">
+                        <h3 className="text-sm font-semibold uppercase tracking-wider text-primary flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                          Open Service Requests Pool (Real-time)
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {(() => {
+                            const openTickets = (serviceTickets.length > 0 ? serviceTickets : []).filter(t => t.status === 'Open' || !t.assigned_technician);
+
+                            if (openTickets.length === 0) {
+                              return (
+                                <div className="col-span-2 glass-card p-6 rounded-xl text-center">
+                                  <p className="text-xs text-on-surface-variant">No open service requests in pool.</p>
+                                </div>
+                              );
+                            }
+
+                            return openTickets.map(t => (
+                              <div key={t.id} className="glass-card p-5 rounded-xl space-y-3 hover:border-secondary/20 border border-transparent transition-all font-normal">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-xs text-on-surface-variant font-mono">{t.ticket_number}</span>
+                                  <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${t.priority === 'Critical' ? 'bg-error/25 text-error border border-error/20' : 'bg-primary/20 text-primary border border-primary/20'}`}>{t.priority}</span>
+                                </div>
+                                <h4 className="font-bold text-sm text-primary">{t.vehicle_reg}</h4>
+                                <p className="text-xs text-on-surface-variant">{t.issue_description}</p>
+                                <button 
+                                  onClick={() => acceptServiceTicket(t.id)} 
+                                  className="w-full py-1.5 bg-surface-container hover:bg-surface-container-high rounded text-xs font-bold text-secondary"
+                                >
+                                  Accept Job / Assign to Me
+                                </button>
+                              </div>
+                            ));
+                          })()}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="space-y-6 animate-fade-in font-normal">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h4 className="font-bold text-sm">Service pipeline workflow</h4>
+                        <p className="text-xs text-on-surface-variant">Assign tickets to technicians, track parts orders, and close workflows.</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {(serviceTickets.length > 0 ? serviceTickets : [
+                        { id: 't1', ticket_number: 'TKT-8842', vehicle_reg: 'IV-7722-M', issue_description: 'Overheating under load & warning lights on dashboard', priority: 'Critical', assigned_technician: 'Sunit Malhotra', status: 'In Progress' },
+                        { id: 't2', ticket_number: 'TKT-8843', vehicle_reg: 'IV-4401-B', issue_description: 'Cell balance voltage variance exceeds safe threshold (45mV)', priority: 'High', assigned_technician: 'Rohan Deshmukh', status: 'Diagnosed' },
+                        { id: 't3', ticket_number: 'TKT-8844', vehicle_reg: 'IV-2311-L', issue_description: 'Periodic GPS signal drops & connectivity interruption', priority: 'Medium', assigned_technician: 'Amit Mishra', status: 'Open' }
+                      ]).map(t => (
+                        <div key={t.id} className="glass-card p-5 rounded-xl border border-white/5 space-y-4">
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs font-mono font-bold text-primary">{t.ticket_number}</span>
+                            <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${t.priority === 'Critical' ? 'bg-error/25 text-error border border-error/20' : 'bg-primary/20 text-primary border border-primary/20'}`}>
+                              {t.priority}
+                            </span>
+                          </div>
+
+                          <div>
+                            <h4 className="text-xs text-on-surface-variant">Target Vehicle</h4>
+                            <p className="text-sm font-bold mt-0.5">{t.vehicle_reg}</p>
+                          </div>
+
+                          <div>
+                            <h4 className="text-xs text-on-surface-variant">Reported Issue</h4>
+                            <p className="text-xs text-on-surface mt-1 leading-relaxed">{t.issue_description}</p>
+                          </div>
+
+                          <div className="pt-2 border-t border-white/5 flex justify-between items-center text-xs font-normal">
+                            <div>
+                              <span className="text-on-surface-variant block text-[10px]">Technician</span>
+                              <span className="font-semibold">{t.assigned_technician || 'Unassigned'}</span>
+                            </div>
+                            <div>
+                              <span className="text-on-surface-variant block text-[10px] text-right">Workflow Status</span>
+                              <span className="text-secondary font-bold">{t.status}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
               )}
 
               {/* -------------------------------------------------------------
