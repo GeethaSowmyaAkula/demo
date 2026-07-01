@@ -162,18 +162,8 @@
 
       <div class="space-y-6">
         <div>
-          <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Corporate Identity Email</label>
-          <input type="email" id="login-email" value="admin@innovibe.in" class="glass-input w-full px-4 py-3 rounded-lg text-sm" />
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Access Key Credentials</label>
-          <input type="password" id="login-password" value="password123" class="glass-input w-full px-4 py-3 rounded-lg text-sm" />
-        </div>
-
-        <div>
           <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Operational Role Domain</label>
-          <select id="login-role" onchange="handleRoleChange(this.value)" class="glass-input w-full px-4 py-3 rounded-lg text-sm">
+          <select id="login-role" class="glass-input w-full px-4 py-3 rounded-lg text-sm">
             <option value="Admin">Admin (Universal Control)</option>
             <option value="Fleet Manager">Fleet Manager</option>
             <option value="Driver">Driver / Operator</option>
@@ -186,7 +176,7 @@
         <div id="login-error-msg" class="hidden p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-xs text-red-500 font-medium mb-4 text-center"></div>
 
         <button onclick="handleLogin()" class="w-full py-3.5 bg-gradient-to-r from-primary-container to-secondary-container hover:brightness-110 text-background font-bold rounded-lg text-sm shadow-lg transition-all">
-          Authenticate & Decrypt Session
+          Access Operational Dashboard
         </button>
       </div>
     </div>
@@ -841,17 +831,28 @@
     }
 
     async function handleLogin() {
-      const email = document.getElementById('login-email').value;
-      const password = document.getElementById('login-password').value;
       const role = document.getElementById('login-role').value;
       
       const loginBtn = document.querySelector('button[onclick="handleLogin()"]');
-      if (loginBtn) loginBtn.innerText = "Authenticating...";
+      if (loginBtn) loginBtn.innerText = "Accessing Dashboard...";
+
+      // Map roles to background Supabase Auth accounts
+      const emails = {
+        'Admin': 'admin@innovibe.in',
+        'Fleet Manager': 'manager@innovibe.in',
+        'Driver': 'driver@innovibe.in',
+        'Technician': 'technician@innovibe.in',
+        'Operations Team': 'operations@innovibe.in',
+        'Finance Team': 'finance@innovibe.in'
+      };
+      
+      const email = emails[role];
+      const password = 'password123';
 
       let authenticatedRole = role;
       let authenticatedName = "Arjun Sharma";
 
-      if (supabase && email && password) {
+      if (supabase && email) {
         try {
           const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
             email: email,
@@ -886,7 +887,7 @@
       }
 
       // Restore button text
-      if (loginBtn) loginBtn.innerText = "Authenticate & Decrypt Session";
+      if (loginBtn) loginBtn.innerText = "Access Operational Dashboard";
 
       document.getElementById('login-container').classList.add('hidden');
       document.getElementById('app-container').classList.remove('hidden');
