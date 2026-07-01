@@ -799,6 +799,16 @@
       CLIENT LOGIC SCRIPTS
       ------------------------------------------------------------- -->
   <script>
+    window.onerror = function(message, source, lineno, colno, error) {
+      console.error("Global JS Error caught:", message, "on line:", lineno);
+      const errorMsgEl = document.getElementById('login-error-msg');
+      if (errorMsgEl) {
+        errorMsgEl.classList.remove('hidden');
+        errorMsgEl.innerText = `Global Error: ${message} (Line ${lineno})`;
+      }
+      return false;
+    };
+
     const ROLE_PERMISSIONS = {
       'Admin': ['Dashboard', 'Fleet', 'Drivers', 'Battery', 'Service', 'Inventory', 'Geofencing', 'ERP', 'Copilot', 'DigitalTwin', 'Remote'],
       'Fleet Manager': ['Dashboard', 'Fleet', 'Drivers', 'Battery', 'Service', 'Inventory', 'Geofencing', 'Copilot', 'DigitalTwin'],
