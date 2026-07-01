@@ -67,6 +67,7 @@ export default function App() {
     if (supabaseClient) {
       setDbConnected(true);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadTechnicianServiceTickets = async () => {
@@ -95,6 +96,7 @@ export default function App() {
         supabaseClient.removeChannel(channel);
       };
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn, loginRole]);
 
   const submitDriverServiceTicket = async () => {
