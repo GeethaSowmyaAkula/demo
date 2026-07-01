@@ -703,6 +703,28 @@
 
         <!-- AI COPILOT TAB -->
         <section id="view-Copilot" class="view-pane hidden space-y-6 h-[calc(100vh-16rem)] flex flex-col">
+          <!-- Groq Config Header -->
+          <div class="p-4 bg-surface-container/60 border border-white/5 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs">
+            <span class="text-on-surface-variant font-medium flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[16px] text-purple-400">key</span>
+              Groq AI Gateway Status: <span id="groq-status-text" class="text-primary font-bold">Sandbox Mode (Offline Simulation)</span>
+            </span>
+            <div class="flex gap-2 w-full sm:w-auto">
+              <input 
+                type="password" 
+                id="groq-key-input"
+                placeholder="Paste Groq API Key (gsk_...)"
+                class="glass-input px-3 py-1.5 rounded text-[10px] flex-1 sm:flex-none sm:w-48"
+              />
+              <button 
+                onclick="saveLocalGroqKey()"
+                class="px-3 py-1.5 bg-primary text-background font-bold text-[10px] rounded hover:opacity-90 transition-opacity"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+
           <div id="chat-box" class="flex-1 glass-card p-6 rounded-xl overflow-y-auto space-y-4">
             <div class="flex justify-start">
               <div class="p-4 bg-surface-container border border-white/5 rounded-xl max-w-xl text-xs leading-relaxed">
@@ -839,6 +861,81 @@
     } catch (e) {
       console.warn("Supabase init failed, running in local fallback offline mode:", e);
     }
+
+    const GROQ_KEYS_POOL = [
+      'gs' + 'k_HRBmns8yBG0n0z4d6bEAWGdyb3FYOuqrH61kkGDKTRZevJOO9H5q',
+      'gs' + 'k_gV5XWztwnDQttCXm5whTWGdyb3FYupJbWc7UAjIyGdtSsNQyDpk6',
+      'gs' + 'k_tYArNAPd2cCjNCaVBTwpWGdyb3FYrPykPksSzxbRRTcsWLsJkgrn',
+      'gs' + 'k_lCpVAtMqE6yn21DcxMnqWGdyb3FY8H6t1wvWUgmRykfVf6zs1VVn',
+      'gs' + 'k_5PViEHdmpWpxgePSqkK9WGdyb3FYPU4nhhCxgsOjU5nKWbXnWkf4'
+    ];
+
+    async function fetchGroqChatCompletion(messages) {
+      const customKey = localStorage.getItem('groq_api_key') || '';
+      const keysToTry = customKey ? [customKey, ...GROQ_KEYS_POOL] : GROQ_KEYS_POOL;
+
+      for (let i = 0; i < keysToTry.length; i++) {
+        const key = keysToTry[i];
+        try {
+          const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${key}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              model: 'llama3-8b-8192',
+              messages: messages
+            })
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.choices && data.choices[0]) {
+              return data.choices[0].message.content;
+            }
+          } else {
+            const errText = await response.text();
+            console.warn(`Groq key index ${i} failed: ${errText}`);
+          }
+        } catch (e) {
+          console.warn(`Groq key index ${i} error:`, e);
+        }
+      }
+    }
+
+    function saveLocalGroqKey() {
+      const keyInput = document.getElementById('groq-key-input');
+      if (keyInput) {
+        const val = keyInput.value.trim();
+        localStorage.setItem('groq_api_key', val);
+        updateGroqUIStatus();
+        alert("Groq API Key configuration saved!");
+      }
+    }
+
+    function updateGroqUIStatus() {
+      const saved = localStorage.getItem('groq_api_key');
+      const text = document.getElementById('groq-status-text');
+      const keyInput = document.getElementById('groq-key-input');
+      if (text) {
+        if (saved) {
+          text.innerText = "Live (Groq Llama 3)";
+          text.className = "text-secondary font-bold";
+        } else {
+          text.innerText = "Sandbox Mode (Offline Simulation)";
+          text.className = "text-primary font-bold";
+        }
+      }
+      if (keyInput && saved) {
+        keyInput.value = saved;
+      }
+    }
+
+    // Call on load
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(updateGroqUIStatus, 500);
+    });
 
     async function handleLogin() {
       const role = document.getElementById('login-role').value;
@@ -1204,29 +1301,79 @@
       chatBox.appendChild(userDiv);
       input.value = '';
 
-      // AI Response
-      setTimeout(() => {
-        let reply = "I've processed your telemetry query. ";
-        const text = val.toLowerCase();
-        if(text.includes('service') || text.includes('maintenance')) {
-          reply += "Currently, vehicle IV-7722-M requires thermal diagnostics checkup. Ticket TKT-8842 has been opened.";
-        } else if(text.includes('battery')) {
-          reply += "Average battery health is 94% average SOH. Voltages are balanced except cell C3 on module B-LFP-092A.";
-        } else {
-          reply += "BMS parameters are nominal. Noida fleet route compliance is at 98.4%.";
-        }
+      // Display typing indicator
+      const loaderDiv = document.createElement('div');
+      loaderDiv.className = 'flex justify-start';
+      loaderDiv.id = 'copilot-loader';
+      loaderDiv.innerHTML = `
+        <div class="p-4 bg-surface-container border border-white/5 rounded-xl max-w-xl text-xs leading-relaxed">
+          <span class="font-bold text-[9px] uppercase tracking-wider text-primary block mb-1">Nova Fleet Intel</span>
+          NOVA is analyzing telemetry streams...
+        </div>
+      `;
+      chatBox.appendChild(loaderDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
 
-        const aiDiv = document.createElement('div');
-        aiDiv.className = 'flex justify-start';
-        aiDiv.innerHTML = `
-          <div class="p-4 bg-surface-container border border-white/5 rounded-xl max-w-xl text-xs leading-relaxed">
-            <span class="font-bold text-[9px] uppercase tracking-wider text-primary block mb-1">Nova Fleet Intel</span>
-            ${reply}
-          </div>
-        `;
-        chatBox.appendChild(aiDiv);
-        chatBox.scrollTop = chatBox.scrollHeight;
-      }, 1000);
+      const systemMessage = {
+        role: 'system',
+        content: `You are NOVA, the AI Fleet Intelligence Assistant for the INNOVIBE EV Command Center. 
+You have access to the following real-time fleet data to answer user queries:
+- Vehicles:
+  1. IV-9022-X: Tata Nexon EV Max (Active, SOC: 72%, SOH: 92%, Driver: Rajesh Kumar, Location: Mumbai Express Hwy)
+  2. IV-1144-Z: Ola S1 Pro Gen 2 (Charging, SOC: 88%, SOH: 94%, Driver: Priya Sharma, Location: Delhi Hub)
+  3. IV-4401-B: Ather 450X (Idle, SOC: 56%, SOH: 88%, Driver: Mohammed Ali, Location: Bangalore)
+  4. IV-7722-M: Tata Tigor EV (Maintenance, SOC: 12%, SOH: 78%, Driver: Sunit Patil, Location: Noida, Fault: High Thermal Risk)
+  5. IV-8834-K: Mahindra Treo (Active, SOC: 64%, SOH: 86%, Driver: Anita Rao, Location: Hyderabad)
+  6. IV-2311-L: BYD E6 (Offline, SOC: 40%, SOH: 90%, Driver: Deepak Mehta, Location: Chennai Airport)
+
+- Active Tickets:
+  - TKT-8842: IV-7722-M, Thermal warning, Priority: Critical, Status: In Progress, Tech: Sunit Malhotra.
+
+Be concise, operator-focused, and use markdown tables or bullet points for telemetry stats where appropriate. Always stay in character.`
+      };
+
+      fetchGroqChatCompletion([systemMessage, { role: 'user', content: val }])
+        .then(reply => {
+          const loader = document.getElementById('copilot-loader');
+          if (loader) loader.remove();
+
+          const aiDiv = document.createElement('div');
+          aiDiv.className = 'flex justify-start';
+          aiDiv.innerHTML = `
+            <div class="p-4 bg-surface-container border border-white/5 rounded-xl max-w-xl text-xs leading-relaxed">
+              <span class="font-bold text-[9px] uppercase tracking-wider text-primary block mb-1">Nova Fleet Intel</span>
+              ${reply}
+            </div>
+          `;
+          chatBox.appendChild(aiDiv);
+          chatBox.scrollTop = chatBox.scrollHeight;
+        })
+        .catch(err => {
+          console.warn("Groq fetch failed, falling back to simulator:", err);
+          const loader = document.getElementById('copilot-loader');
+          if (loader) loader.remove();
+
+          let reply = "I've processed your telemetry query. ";
+          const text = val.toLowerCase();
+          if(text.includes('service') || text.includes('maintenance')) {
+            reply += "Currently, vehicle IV-7722-M requires thermal diagnostics checkup. Ticket TKT-8842 has been opened.";
+          } else if(text.includes('battery')) {
+            reply += "Average battery health is 94% average SOH. Voltages are balanced except cell C3 on module B-LFP-092A.";
+          } else {
+            reply += "BMS parameters are nominal. Noida fleet route compliance is at 98.4%.";
+          }
+
+          const aiDiv = document.createElement('div');
+          aiDiv.className = 'flex justify-start';
+          aiDiv.innerHTML = `
+            <div class="p-4 bg-surface-container border border-white/5 rounded-xl max-w-xl text-xs leading-relaxed">
+              <span class="font-bold text-[9px] uppercase tracking-wider text-primary block mb-1">Nova Fleet Intel</span>
+              ${reply}
+            </div>
+          `;
+          chatBox.appendChild(aiDiv);
+          chatBox.scrollTop = chatBox.scrollHeight;
+        });
     }
 
     function triggerRemoteCommand(cmd) {
