@@ -173,7 +173,7 @@
 
         <div>
           <label class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">Operational Role Domain</label>
-          <select id="login-role" class="glass-input w-full px-4 py-3 rounded-lg text-sm">
+          <select id="login-role" onchange="handleRoleChange(this.value)" class="glass-input w-full px-4 py-3 rounded-lg text-sm">
             <option value="Admin">Admin (Universal Control)</option>
             <option value="Fleet Manager">Fleet Manager</option>
             <option value="Driver">Driver / Operator</option>
@@ -935,6 +935,29 @@
       document.getElementById('login-container').classList.remove('hidden');
       document.getElementById('app-container').classList.add('hidden');
     }
+
+    function handleRoleChange(role) {
+      const emailInput = document.getElementById('login-email');
+      const passwordInput = document.getElementById('login-password');
+      if (!emailInput || !passwordInput) return;
+
+      const emails = {
+        'Admin': 'admin@innovibe.in',
+        'Fleet Manager': 'manager@innovibe.in',
+        'Driver': 'driver@innovibe.in',
+        'Technician': 'technician@innovibe.in',
+        'Operations Team': 'operations@innovibe.in',
+        'Finance Team': 'finance@innovibe.in'
+      };
+
+      emailInput.value = emails[role] || '';
+      passwordInput.value = 'password123';
+    }
+
+    // Auto-fill default Admin credentials on load
+    window.addEventListener('DOMContentLoaded', () => {
+      handleRoleChange('Admin');
+    });
 
     // --- DRIVER: BOOK SERVICE ---
     async function submitDriverServiceTicket() {
