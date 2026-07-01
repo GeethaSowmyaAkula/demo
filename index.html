@@ -342,7 +342,69 @@
                 <h4 class="font-bold text-sm">Real-time Telemetry Overlay</h4>
                 <span class="text-xs text-on-surface-variant">Live coordinate pins</span>
               </div>
-              <div id="dashboard-map" class="flex-1 rounded-lg border border-white/5 relative overflow-hidden h-full bg-slate-955"></div>
+              <!-- Mini Fleet Summary Bar -->
+              <div class="glass-card bg-slate-900/90 border border-white/10 p-2.5 text-[9px] grid grid-cols-5 md:grid-cols-10 gap-1.5 text-white text-center font-medium mb-3">
+                <div><p class="text-on-surface-variant text-[7px] uppercase font-bold">Vehicles</p><p class="text-xs font-bold text-primary">6</p></div>
+                <div><p class="text-on-surface-variant text-[7px] uppercase font-bold">Moving</p><p class="text-xs font-bold text-emerald-500">2</p></div>
+                <div><p class="text-on-surface-variant text-[7px] uppercase font-bold">Charging</p><p class="text-xs font-bold text-blue-400">1</p></div>
+                <div><p class="text-on-surface-variant text-[7px] uppercase font-bold">Idle</p><p class="text-xs font-bold text-yellow-400">1</p></div>
+                <div><p class="text-on-surface-variant text-[7px] uppercase font-bold">Offline</p><p class="text-xs font-bold text-slate-400">1</p></div>
+                <div><p class="text-on-surface-variant text-[7px] uppercase font-bold">In Fence</p><p class="text-xs font-bold text-secondary">2</p></div>
+                <div><p class="text-on-surface-variant text-[7px] uppercase font-bold">Critical</p><p class="text-xs font-bold text-error">1</p></div>
+                <div><p class="text-on-surface-variant text-[7px] uppercase font-bold">Service</p><p class="text-xs font-bold text-amber-500">1</p></div>
+                <div><p class="text-on-surface-variant text-[7px] uppercase font-bold">Fleet SOH</p><p class="text-xs font-bold text-primary">94%</p></div>
+                <div><p class="text-on-surface-variant text-[7px] uppercase font-bold">Battery SOH</p><p class="text-xs font-bold text-secondary">92%</p></div>
+              </div>
+
+              <!-- Map Container -->
+              <div class="flex-1 relative rounded-lg overflow-hidden border border-white/5 h-full">
+                <div id="dashboard-map" class="w-full h-full bg-slate-955"></div>
+                
+                <!-- Floating Layer Controls inside Dashboard Map -->
+                <div class="absolute top-4 right-4 z-[1000] glass-card bg-slate-900/90 border border-white/10 p-2.5 text-[9px] space-y-1.5 max-w-[130px] text-white">
+                  <div class="font-bold border-b border-white/5 pb-1 mb-1 uppercase tracking-wider text-primary">Layers</div>
+                  <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" id="db-layer-vehicles" checked class="rounded text-primary bg-slate-950 border-white/10 w-2.5 h-2.5" /> Live Vehicles</label>
+                  <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" id="db-layer-geofences" checked class="rounded text-primary bg-slate-950 border-white/10 w-2.5 h-2.5" /> Geofences</label>
+                  <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" id="db-layer-stations" checked class="rounded text-primary bg-slate-950 border-white/10 w-2.5 h-2.5" /> Charging Hubs</label>
+                  <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" id="db-layer-centers" checked class="rounded text-primary bg-slate-950 border-white/10 w-2.5 h-2.5" /> Service Centers</label>
+                  <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" id="db-layer-traffic" class="rounded text-primary bg-slate-950 border-white/10 w-2.5 h-2.5" /> Traffic (mock)</label>
+                  <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" id="db-layer-heatmap" class="rounded text-primary bg-slate-950 border-white/10 w-2.5 h-2.5" /> Heatmap (mock)</label>
+                </div>
+
+                <!-- Collapsible Inspector Drawer inside Dashboard Map -->
+                <div id="db-vehicle-inspector" class="absolute top-4 left-4 z-[1000] glass-card bg-slate-950/95 border border-white/10 w-[240px] h-[calc(100%-2rem)] rounded-xl p-3 text-white flex flex-col justify-between hidden overflow-y-auto hide-scrollbar">
+                  <div class="space-y-3">
+                    <div class="flex justify-between items-center border-b border-white/10 pb-1.5">
+                      <div>
+                        <h4 id="db-inspector-id" class="font-bold text-xs text-primary">-</h4>
+                        <p id="db-inspector-model" class="text-[8px] text-on-surface-variant">-</p>
+                      </div>
+                      <button onclick="closeDbInspector()" class="text-on-surface-variant hover:text-white">✕</button>
+                    </div>
+                    <div class="flex border-b border-white/5 text-[8px] font-bold">
+                      <button onclick="setDbInspectorTab('summary')" id="db-tab-summary" class="flex-1 pb-1 text-center border-b-2 border-primary text-primary capitalize">Summary</button>
+                      <button onclick="setDbInspectorTab('battery')" id="db-tab-battery" class="flex-1 pb-1 text-center border-b-2 border-transparent text-on-surface-variant capitalize">Battery</button>
+                      <button onclick="setDbInspectorTab('health')" id="db-tab-health" class="flex-1 pb-1 text-center border-b-2 border-transparent text-on-surface-variant capitalize">Health</button>
+                    </div>
+                    <div id="db-inspector-body" class="text-[9px] space-y-1.5 py-1">
+                      <!-- Populated dynamically -->
+                    </div>
+                  </div>
+                  <div class="border-t border-white/10 pt-1.5 grid grid-cols-2 gap-1 text-[8px] font-bold">
+                    <button onclick="alert('Action locked. Connect backend server.')" class="py-1 bg-white/5 border border-white/10 rounded">Details</button>
+                    <button onclick="alert('Action locked. Connect backend server.')" class="py-1 bg-white/5 border border-white/10 rounded text-error border-error/25">Lock</button>
+                  </div>
+                </div>
+
+                <!-- Map Legend Overlay -->
+                <div class="absolute bottom-4 right-4 z-[1000] glass-card bg-slate-900/90 border border-white/10 p-2 text-[8px] text-white w-32 space-y-1">
+                  <div class="font-bold border-b border-white/5 pb-0.5 uppercase tracking-wider text-primary">Legend</div>
+                  <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-[#10b981]"></span>Active</div>
+                  <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-[#eab308]"></span>Idle</div>
+                  <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-[#3b82f6]"></span>Charging</div>
+                  <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-[#94a3b8]"></span>Offline</div>
+                </div>
+              </div>
             </div>
 
             <div class="glass-card p-6 rounded-xl flex flex-col h-[400px]">
@@ -1462,37 +1524,140 @@
         // Add Hubs & Service Centers
         const chargingIcon = L.divIcon({
           className: 'custom-hub-icon',
-          html: `<div class="w-7 h-7 rounded-full bg-emerald-600 border-2 border-white flex items-center justify-center text-white shadow-md text-xs font-bold">🔌</div>`,
+          html: `<div class="w-7 h-7 rounded-full bg-emerald-600 border-2 border-white flex items-center justify-center text-white shadow-md text-xs font-bold" title="Charging Hub">🔌</div>`,
           iconSize: [28, 28]
         });
         const serviceIcon = L.divIcon({
           className: 'custom-service-icon',
-          html: `<div class="w-7 h-7 rounded-full bg-amber-500 border-2 border-white flex items-center justify-center text-white shadow-md text-xs font-bold">🔧</div>`,
+          html: `<div class="w-7 h-7 rounded-full bg-amber-500 border-2 border-white flex items-center justify-center text-white shadow-md text-xs font-bold" title="Service Center">🔧</div>`,
           iconSize: [28, 28]
         });
 
-        L.marker([28.5355, 77.3910], {icon: chargingIcon}).addTo(dashboardMap).bindPopup("Noida Charging Hub");
-        L.marker([28.6139, 77.2090], {icon: chargingIcon}).addTo(dashboardMap).bindPopup("Delhi Charging Hub");
-        L.marker([19.0760, 72.8777], {icon: chargingIcon}).addTo(dashboardMap).bindPopup("Mumbai Charging Hub");
-        L.marker([28.5355, 77.3910], {icon: serviceIcon}).addTo(dashboardMap).bindPopup("Noida Repair Center");
+        // Track layer groups
+        const stationsGroup = L.layerGroup();
+        const centersGroup = L.layerGroup();
+        const vehiclesGroup = L.layerGroup();
+        const geofencesGroup = L.layerGroup();
+        const heatmapGroup = L.layerGroup();
 
-        // Add Vehicles
+        dashboardMap.addLayer(stationsGroup);
+        dashboardMap.addLayer(centersGroup);
+        dashboardMap.addLayer(vehiclesGroup);
+        dashboardMap.addLayer(geofencesGroup);
+
+        const stationPoints = [
+          { name: "Noida Charging Hub", pos: [28.5355, 77.3910] },
+          { name: "Delhi Charging Hub", pos: [28.6139, 77.2090] },
+          { name: "Mumbai Charging Hub", pos: [19.0760, 72.8777] }
+        ];
+        stationPoints.forEach(pt => {
+          L.marker(pt.pos, {icon: chargingIcon}).addTo(stationsGroup).bindPopup(pt.name);
+        });
+
+        const servicePoints = [
+          { name: "Noida Repair Center", pos: [28.5355, 77.3910] },
+          { name: "Mumbai Maintenance Center", pos: [19.0760, 72.8777] }
+        ];
+        servicePoints.forEach(pt => {
+          L.marker(pt.pos, {icon: serviceIcon}).addTo(centersGroup).bindPopup(pt.name);
+        });
+
+        // Overlay Geofences with Samsara colors: Green=Warehouse, Blue=Charging Hub, Orange=Service Center, Purple=Depot, Red=Restricted
+        const geofenceSpecs = [
+          { name: "Noida Industrial Corridor", center: [28.5355, 77.3910], radius: 45000, type: "warehouse" },
+          { name: "Delhi Logistics Depot", center: [28.6139, 77.2090], radius: 35000, type: "depot" },
+          { name: "Mumbai Airport Depot", center: [19.0760, 72.8777], radius: 50000, type: "depot" },
+          { name: "Delhi NCR Restricted Zone", center: [28.6500, 77.1200], radius: 12000, type: "restricted" }
+        ];
+        const colorMap = {
+          warehouse: '#10b981',
+          depot: '#8b5cf6',
+          restricted: '#ef4444',
+          service: '#f97316'
+        };
+        geofenceSpecs.forEach(gf => {
+          const col = colorMap[gf.type] || '#10b981';
+          L.circle(gf.center, {
+            radius: gf.radius,
+            color: col,
+            fillColor: col,
+            fillOpacity: 0.08,
+            weight: 1.5
+          }).addTo(geofencesGroup).bindPopup(`
+            <div class="text-xs text-slate-800">
+              <h5 class="font-bold text-slate-900">${gf.name}</h5>
+              <p>Type: <span class="capitalize font-semibold">${gf.type}</span></p>
+              <p>Vehicles Inside: 2</p>
+              <p>Violations Today: 0</p>
+            </div>
+          `);
+        });
+
+        // Add Vehicles with low battery connection lines
         initialVehicles.forEach(v => {
+          const isLow = v.soc < 20;
           const marker = L.marker([v.lat, v.lng], {
             icon: L.divIcon({
               className: 'custom-ev-icon',
               html: createEVIconHTML(v.status),
               iconSize: [32, 32]
             })
-          }).addTo(dashboardMap).bindPopup(`
-            <div class="text-xs space-y-1 text-slate-800">
-              <h4 class="font-bold text-slate-900">${v.id} (${v.model})</h4>
-              <p>Status: ${v.status}</p>
-              <p>SoC: ${v.soc}% | SoH: ${v.soh}%</p>
-              <p>Speed: ${v.speed} km/h</p>
+          }).addTo(vehiclesGroup);
+
+          // Detailed popup (20+ attributes)
+          marker.bindPopup(`
+            <div class="text-xs space-y-1 text-slate-800 min-w-[200px]">
+              <h4 class="font-bold text-slate-900 border-b pb-1 mb-1">${v.id} (${v.model})</h4>
+              <p><strong>Driver:</strong> Rajesh Sharma (Ph: +91 99881 12345)</p>
+              <p><strong>Status:</strong> <span class="font-bold">${v.status}</span></p>
+              <p><strong>Speed:</strong> ${v.speed} km/h</p>
+              <p><strong>Battery SoC:</strong> ${v.soc}% | <strong>SOH:</strong> 92%</p>
+              <p><strong>Battery Temp:</strong> 34°C</p>
+              <p><strong>Est Range:</strong> ${(v.soc * 2.8).toFixed(0)} km</p>
+              <p><strong>Active Faults:</strong> <span class="text-error font-bold">${isLow ? 'Low Battery Alert' : 'None'}</span></p>
+              <p><strong>Odometer:</strong> 42,120 km</p>
+              <p><strong>Last Update:</strong> Just Now</p>
             </div>
           `);
+
+          marker.on('click', () => {
+            openDbInspector(v);
+          });
+
           vehicleMarkers[v.id] = marker;
+
+          // Connect low battery to Noida Hub
+          if (isLow) {
+            L.polyline([[v.lat, v.lng], [28.5355, 77.3910]], {
+              color: '#ef4444',
+              weight: 2,
+              dashArray: '5, 5',
+              opacity: 0.85
+            }).addTo(vehiclesGroup);
+
+            L.circle([28.5355, 77.3910], {
+              radius: 12000,
+              color: '#ef4444',
+              fillColor: '#ef4444',
+              fillOpacity: 0.1,
+              weight: 1,
+              dashArray: '3, 3'
+            }).addTo(vehiclesGroup);
+          }
+        });
+
+        // Layer controls listeners
+        document.getElementById('db-layer-vehicles').addEventListener('change', (e) => {
+          e.target.checked ? dashboardMap.addLayer(vehiclesGroup) : dashboardMap.removeLayer(vehiclesGroup);
+        });
+        document.getElementById('db-layer-geofences').addEventListener('change', (e) => {
+          e.target.checked ? dashboardMap.addLayer(geofencesGroup) : dashboardMap.removeLayer(geofencesGroup);
+        });
+        document.getElementById('db-layer-stations').addEventListener('change', (e) => {
+          e.target.checked ? dashboardMap.addLayer(stationsGroup) : dashboardMap.removeLayer(stationsGroup);
+        });
+        document.getElementById('db-layer-centers').addEventListener('change', (e) => {
+          e.target.checked ? dashboardMap.addLayer(centersGroup) : dashboardMap.removeLayer(centersGroup);
         });
 
         // Add heatmaps simulation
@@ -1500,15 +1665,17 @@
           L.circle([v.lat, v.lng], {
             color: '#f97316',
             fillColor: '#f97316',
-            fillOpacity: 0.08,
+            fillOpacity: 0.05,
             radius: 80000,
             stroke: false
-          }).addTo(dashboardMap);
+          }).addTo(heatmapGroup);
+        });
+        document.getElementById('db-layer-heatmap').addEventListener('change', (e) => {
+          e.target.checked ? dashboardMap.addLayer(heatmapGroup) : dashboardMap.removeLayer(heatmapGroup);
         });
       }
 
       // 2. Geofencing Map
-      const gfMapEl = document.getElementById('geofencing-map');
       if (gfMapEl && !geofencingMap) {
         geofencingMap = L.map('geofencing-map').setView([20.5937, 78.9629], 5);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
@@ -1940,6 +2107,79 @@
         }).addTo(geofencingMap);
       }
     }
+
+    let currentInspectorVehicle = null;
+    let currentInspectorTab = 'summary';
+
+    window.openDbInspector = function(v) {
+      currentInspectorVehicle = v;
+      const idEl = document.getElementById('db-inspector-id');
+      const modelEl = document.getElementById('db-inspector-model');
+      if (idEl) idEl.innerText = v.id;
+      if (modelEl) modelEl.innerText = v.model || 'Tata Nexon EV Max';
+      
+      const drawer = document.getElementById('db-vehicle-inspector');
+      if (drawer) {
+        drawer.classList.remove('hidden');
+      }
+      window.setDbInspectorTab(currentInspectorTab || 'summary');
+    };
+
+    window.closeDbInspector = function() {
+      const drawer = document.getElementById('db-vehicle-inspector');
+      if (drawer) {
+        drawer.classList.add('hidden');
+      }
+      currentInspectorVehicle = null;
+    };
+
+    window.setDbInspectorTab = function(tab) {
+      currentInspectorTab = tab;
+      const tabs = ['summary', 'battery', 'health'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`db-tab-${t}`);
+        if (btn) {
+          if (t === tab) {
+            btn.className = "flex-1 pb-1 text-center border-b-2 border-primary text-primary capitalize";
+          } else {
+            btn.className = "flex-1 pb-1 text-center border-b-2 border-transparent text-on-surface-variant capitalize";
+          }
+        }
+      });
+
+      const body = document.getElementById('db-inspector-body');
+      if (!body || !currentInspectorVehicle) return;
+
+      const v = currentInspectorVehicle;
+      if (tab === 'summary') {
+        body.innerHTML = `
+          <p><strong>Speed:</strong> ${v.speed || 0} km/h</p>
+          <p><strong>Status:</strong> <span class="font-bold">${v.status}</span></p>
+          <p><strong>Battery SOC:</strong> ${v.soc}%</p>
+          <p><strong>Health Score:</strong> 92%</p>
+          <p><strong>Driver:</strong> Rajesh Sharma</p>
+          <p><strong>Odometer:</strong> 42,120 km</p>
+          <p><strong>Trip Duration:</strong> 3h 15m</p>
+        `;
+      } else if (tab === 'battery') {
+        body.innerHTML = `
+          <p><strong>SOC:</strong> ${v.soc}%</p>
+          <p><strong>SOH:</strong> 92%</p>
+          <p><strong>Temp:</strong> 34°C</p>
+          <p><strong>Cycles:</strong> 242</p>
+          <p><strong>Range:</strong> ${(v.soc * 2.8).toFixed(0)} km</p>
+          <p class="text-emerald-400">💡 Charge recommendation: Noida Charging Hub</p>
+        `;
+      } else if (tab === 'health') {
+        body.innerHTML = `
+          <p><strong>Overall:</strong> 94/100</p>
+          <p class="text-emerald-400"><strong>Battery:</strong> Excellent</p>
+          <p class="text-emerald-400"><strong>Motor:</strong> Good</p>
+          <p class="text-emerald-400"><strong>Controller:</strong> Good</p>
+          <p class="text-error"><strong>Brakes:</strong> Warning (82% wear)</p>
+        `;
+      }
+    };
 
     function clearSelectedRoute() {
       selectedVehicleId = null;

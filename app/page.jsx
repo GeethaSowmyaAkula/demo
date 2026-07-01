@@ -1087,6 +1087,7 @@ Be concise, operator-focused, and use markdown tables or bullet points for telem
                           ]}
                           geofences={geofences}
                           showHeatmap={true}
+                          isDashboardMode={true}
                         />
                       </div>
                     </div>
