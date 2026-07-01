@@ -400,7 +400,8 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- Admin View: All Vehicles -->
+          <div class="role-content admin-only grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="glass-card p-5 rounded-xl border border-white/5 space-y-4">
               <div class="flex justify-between items-start">
                 <div>
@@ -458,11 +459,37 @@
               <button onclick="switchTab('DigitalTwin')" class="w-full py-2 bg-surface-container hover:bg-surface-container-high rounded-lg text-[10px] font-bold text-on-surface">Diagnostics Twin</button>
             </div>
           </div>
+
+          <!-- Driver View: My Assigned Vehicle Only -->
+          <div class="role-content driver-only hidden max-w-md mx-auto">
+            <div class="glass-card p-6 rounded-xl border border-white/5 space-y-5">
+              <div class="flex justify-between items-center">
+                <div>
+                  <span class="badge badge-green mb-1.5">My Assigned Vehicle</span>
+                  <h3 class="font-bold text-xl text-primary">IV-9022-X</h3>
+                  <p class="text-xs text-on-surface-variant">Tata Nexon EV Max</p>
+                </div>
+                <span class="badge badge-green">Active</span>
+              </div>
+              <div class="space-y-2 text-xs border-t border-b border-white/5 py-3">
+                <div class="flex justify-between"><span class="text-on-surface-variant">Tire Pressure</span><span class="font-bold text-secondary">33 PSI (Nominal)</span></div>
+                <div class="flex justify-between"><span class="text-on-surface-variant">Cabin Temp</span><span class="font-bold">22°C</span></div>
+                <div class="flex justify-between"><span class="text-on-surface-variant">Battery Chemistry</span><span class="font-mono text-secondary">LFP (Iron Phosphate)</span></div>
+                <div class="flex justify-between"><span class="text-on-surface-variant">Last Diagnostic Check</span><span class="text-on-surface">Today, 08:30 AM</span></div>
+              </div>
+              <div class="flex justify-between items-center text-xs font-bold">
+                <span>72% State of Charge (SOC)</span>
+                <span>92% State of Health (SOH)</span>
+              </div>
+              <button onclick="switchTab('DigitalTwin')" class="w-full py-2.5 bg-primary text-background font-bold rounded-lg text-xs hover:opacity-90">Open Vehicle 3D Replica Twin</button>
+            </div>
+          </div>
         </section>
 
         <!-- DRIVERS TAB -->
         <section id="view-Drivers" class="view-pane hidden space-y-6">
-          <div class="glass-card p-6 rounded-xl">
+          <!-- Admin View: Driver Safety Matrix -->
+          <div class="role-content admin-only glass-card p-6 rounded-xl">
             <h4 class="font-bold text-sm mb-4">Driver Safety Score matrix</h4>
             <div class="space-y-4">
               <div class="p-4 bg-surface-container/40 border border-white/5 rounded-xl flex items-center justify-between">
@@ -470,7 +497,7 @@
                   <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">RK</div>
                   <div>
                     <h4 class="text-sm font-bold">Rajesh Kumar</h4>
-                    <span class="text-[10px] text-on-surface-variant">License: DL-142021008432</span>
+                    <span class="text-[10px] text-on-surface-variant font-mono">License: DL-142021008432</span>
                   </div>
                 </div>
                 <span class="text-lg font-bold text-secondary">94/100</span>
@@ -480,10 +507,52 @@
                   <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">PS</div>
                   <div>
                     <h4 class="text-sm font-bold">Priya Sharma</h4>
-                    <span class="text-[10px] text-on-surface-variant">License: DL-092022119428</span>
+                    <span class="text-[10px] text-on-surface-variant font-mono">License: DL-092022119428</span>
                   </div>
                 </div>
                 <span class="text-lg font-bold text-secondary">88/100</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Driver View: Personal Driver Dashboard -->
+          <div class="role-content driver-only hidden space-y-6">
+            <div class="glass-card p-6 rounded-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
+              <div class="space-y-2">
+                <span class="badge badge-green">Operator Safety Status: Excellent</span>
+                <h3 class="text-xl font-bold text-primary">Rajesh Kumar</h3>
+                <p class="text-xs text-on-surface-variant">Licence Ref: DL-142021008432 | Active Shifts: 142 Hours</p>
+              </div>
+              <div class="text-center">
+                <span class="text-[10px] text-on-surface-variant uppercase tracking-wider block font-bold">My Driving Score</span>
+                <span class="text-4xl font-black text-secondary text-glow">94/100</span>
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div class="glass-card p-4 text-center">
+                <span class="text-[10px] text-on-surface-variant block uppercase font-bold">Braking alerts</span>
+                <span class="text-lg font-bold text-on-surface block mt-1">2 (Safe)</span>
+              </div>
+              <div class="glass-card p-4 text-center">
+                <span class="text-[10px] text-on-surface-variant block uppercase font-bold">Harsh Accel</span>
+                <span class="text-lg font-bold text-on-surface block mt-1">1 (Safe)</span>
+              </div>
+              <div class="glass-card p-4 text-center">
+                <span class="text-[10px] text-on-surface-variant block uppercase font-bold">Route Compliance</span>
+                <span class="text-lg font-bold text-secondary block mt-1">98%</span>
+              </div>
+              <div class="glass-card p-4 text-center">
+                <span class="text-[10px] text-on-surface-variant block uppercase font-bold">Efficiency</span>
+                <span class="text-lg font-bold text-primary block mt-1">0.14 kWh/km</span>
+              </div>
+            </div>
+
+            <div class="glass-card p-6 rounded-xl space-y-3">
+              <h4 class="font-bold text-sm text-primary">Assigned Route Dispatch</h4>
+              <div class="p-3 bg-surface-container/60 rounded border border-white/5 text-xs space-y-1.5">
+                <div class="flex justify-between font-bold"><span>Origin: Mumbai Depot</span><span>Destination: Pune Expressway Hub</span></div>
+                <div class="text-[10px] text-on-surface-variant">Scheduled Start: 10:00 AM | Route Corridor: HW-48 (Keep inside geofence corridor)</div>
               </div>
             </div>
           </div>
@@ -506,7 +575,8 @@
 
         <!-- SERVICE TICKETS TAB -->
         <section id="view-Service" class="view-pane hidden space-y-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Admin View: All Tickets Pipeline -->
+          <div class="role-content admin-only grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="glass-card p-5 rounded-xl border border-white/5 space-y-4">
               <div class="flex justify-between items-center">
                 <span class="text-xs font-mono font-bold text-primary">TKT-8842</span>
@@ -517,6 +587,40 @@
               <div class="flex justify-between pt-2 border-t border-white/5 text-xs">
                 <span>Tech: Sunit Malhotra</span>
                 <span class="text-secondary font-bold">In Progress</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Technician View: Assigned Work Orders -->
+          <div class="role-content technician-only hidden space-y-6">
+            <div class="glass-card p-6 rounded-xl space-y-4">
+              <div class="flex justify-between items-center border-b border-white/5 pb-3">
+                <div>
+                  <span class="text-xs text-error font-mono font-bold">ASSIGNED ORDER: TKT-8842</span>
+                  <h4 class="font-bold text-base mt-1">IV-7722-M (Tata Tigor EV)</h4>
+                </div>
+                <span class="badge badge-red">Critical Priority</span>
+              </div>
+              
+              <div class="space-y-4">
+                <h5 class="text-xs font-bold text-on-surface uppercase tracking-wider">Service Diagnostics Checklist</h5>
+                <label class="flex items-center gap-3 text-xs cursor-pointer p-3 bg-surface-container-low/50 rounded hover:bg-surface-container-high transition-colors">
+                  <input type="checkbox" class="rounded border-white/10 bg-surface-container text-secondary" />
+                  <span>Verify BMS voltage balancer cell C3 mismatch (&gt;35mV variation)</span>
+                </label>
+                <label class="flex items-center gap-3 text-xs cursor-pointer p-3 bg-surface-container-low/50 rounded hover:bg-surface-container-high transition-colors">
+                  <input type="checkbox" class="rounded border-white/10 bg-surface-container text-secondary" />
+                  <span>Measure thermal sensor resistance range (Target: 25-35°C under load)</span>
+                </label>
+                <label class="flex items-center gap-3 text-xs cursor-pointer p-3 bg-surface-container-low/50 rounded hover:bg-surface-container-high transition-colors">
+                  <input type="checkbox" class="rounded border-white/10 bg-surface-container text-secondary" />
+                  <span>Execute test charging cycle log on Noida 15kW charger</span>
+                </label>
+              </div>
+
+              <div class="pt-4 border-t border-white/5 flex justify-end gap-3">
+                <button class="px-4 py-2 bg-surface-container rounded-lg text-xs font-bold text-on-surface">Postpone Repair</button>
+                <button class="px-4 py-2 bg-secondary text-background font-bold rounded-lg text-xs hover:opacity-90">Close Service Ticket</button>
               </div>
             </div>
           </div>
@@ -728,6 +832,19 @@
             btn.style.display = 'flex';
           } else {
             btn.style.display = 'none';
+          }
+        });
+
+        // Filter Content Blocks based on Selected Role
+        document.querySelectorAll('.role-content').forEach(el => {
+          const isRoleSpecific = el.classList.contains(role.toLowerCase().replace(' ', '-') + '-only');
+          const isAdminContent = el.classList.contains('admin-only');
+          const isUserAdmin = ['Super Admin', 'Fleet Admin', 'Fleet Manager', 'Operations Team'].includes(role);
+          
+          if(isRoleSpecific || (isAdminContent && isUserAdmin)) {
+            el.classList.remove('hidden');
+          } else {
+            el.classList.add('hidden');
           }
         });
 
