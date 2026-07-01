@@ -10,6 +10,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
@@ -260,10 +261,10 @@
 
       <div class="p-6 border-t border-white/5 flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center font-bold text-primary">AS</div>
+          <div id="display-avatar-initials" class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center font-bold text-primary">AS</div>
           <div>
-            <h4 class="text-xs font-bold">Arjun Sharma</h4>
-            <span id="display-role" class="text-[10px] text-on-surface-variant">Super Admin</span>
+            <h4 id="display-name" class="text-xs font-bold">Arjun Sharma</h4>
+            <span id="display-role" class="text-[10px] text-on-surface-variant">Admin</span>
           </div>
         </div>
         <button onclick="handleLogout()" class="w-8 h-8 rounded-lg flex items-center justify-center bg-error-container/20 text-error hover:bg-error-container/30 transition-colors">
@@ -549,6 +550,31 @@
                 <div class="text-[10px] text-on-surface-variant">Scheduled Start: 10:00 AM | Route Corridor: HW-48 (Keep inside geofence corridor)</div>
               </div>
             </div>
+
+            <div class="glass-card p-6 rounded-xl space-y-4">
+              <h4 class="font-bold text-sm text-primary">Book Service / Request Repair</h4>
+              <div class="space-y-3">
+                <div>
+                  <label class="block text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider mb-1">Issue Description</label>
+                  <textarea id="driver-issue-desc" placeholder="e.g. Left motor vibration above 40km/h or brakes squealing..." class="w-full glass-input p-2 rounded text-xs" rows="2"></textarea>
+                </div>
+                <div class="flex justify-between items-center gap-4">
+                  <div class="flex-1">
+                    <label class="block text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider mb-1">Priority</label>
+                    <select id="driver-issue-priority" class="w-full glass-input py-1.5 px-2 rounded text-xs">
+                      <option value="Low">Low</option>
+                      <option value="Medium" selected>Medium</option>
+                      <option value="High">High</option>
+                      <option value="Critical">Critical</option>
+                    </select>
+                  </div>
+                  <button onclick="submitDriverServiceTicket()" class="mt-4 px-4 py-2 bg-primary text-background font-bold text-xs rounded hover:opacity-90 transition-opacity">
+                    Submit Request
+                  </button>
+                </div>
+                <div id="driver-booking-status" class="hidden text-xs font-semibold"></div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -585,36 +611,27 @@
             </div>
           </div>
 
-          <!-- Technician View: Assigned Work Orders -->
+          <!-- Technician View: Job Queue & Active Work -->
           <div class="role-content technician-only hidden space-y-6">
-            <div class="glass-card p-6 rounded-xl space-y-4">
-              <div class="flex justify-between items-center border-b border-white/5 pb-3">
-                <div>
-                  <span class="text-xs text-error font-mono font-bold">ASSIGNED ORDER: TKT-8842</span>
-                  <h4 class="font-bold text-base mt-1">IV-7722-M (Tata Tigor EV)</h4>
-                </div>
-                <span class="badge badge-red">Critical Priority</span>
-              </div>
-              
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <!-- Left side: Active Checklist -->
               <div class="space-y-4">
-                <h5 class="text-xs font-bold text-on-surface uppercase tracking-wider">Service Diagnostics Checklist</h5>
-                <label class="flex items-center gap-3 text-xs cursor-pointer p-3 bg-surface-container-low/50 rounded hover:bg-surface-container-high transition-colors">
-                  <input type="checkbox" class="rounded border-white/10 bg-surface-container text-secondary" />
-                  <span>Verify BMS voltage balancer cell C3 mismatch (&gt;35mV variation)</span>
-                </label>
-                <label class="flex items-center gap-3 text-xs cursor-pointer p-3 bg-surface-container-low/50 rounded hover:bg-surface-container-high transition-colors">
-                  <input type="checkbox" class="rounded border-white/10 bg-surface-container text-secondary" />
-                  <span>Measure thermal sensor resistance range (Target: 25-35°C under load)</span>
-                </label>
-                <label class="flex items-center gap-3 text-xs cursor-pointer p-3 bg-surface-container-low/50 rounded hover:bg-surface-container-high transition-colors">
-                  <input type="checkbox" class="rounded border-white/10 bg-surface-container text-secondary" />
-                  <span>Execute test charging cycle log on Noida 15kW charger</span>
-                </label>
+                <h4 class="font-bold text-sm text-primary uppercase tracking-wider">My Active Assignment</h4>
+                <div id="tech-active-ticket-container" class="space-y-4">
+                  <div class="glass-card p-6 rounded-xl text-center">
+                    <p class="text-xs text-on-surface-variant">No active service assignments. Accept a job from the pool to begin.</p>
+                  </div>
+                </div>
               </div>
 
-              <div class="pt-4 border-t border-white/5 flex justify-end gap-3">
-                <button class="px-4 py-2 bg-surface-container rounded-lg text-xs font-bold text-on-surface">Postpone Repair</button>
-                <button class="px-4 py-2 bg-secondary text-background font-bold rounded-lg text-xs hover:opacity-90">Close Service Ticket</button>
+              <!-- Right side: Open Requests Pool -->
+              <div class="space-y-4">
+                <h4 class="font-bold text-sm text-secondary uppercase tracking-wider">Open Service Requests Pool</h4>
+                <div id="tech-open-pool-container" class="space-y-4">
+                  <div class="glass-card p-6 rounded-xl text-center">
+                    <p class="text-xs text-on-surface-variant">Loading open requests pool...</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -796,47 +813,305 @@
       'Finance Team': ['Dashboard', 'ERP']
     };
 
-    function handleLogin() {
+    // Initialize Supabase Client
+    const SUPABASE_URL = 'https://pttylnbkpiyuwayugkqq.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB0dHlsbmJrcGl5dXdheXVna3FxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4ODAzOTEsImV4cCI6MjA5ODQ1NjM5MX0.5GamNh1J-um-vdWlzgdhujyv3XGlsru1BFL2jXOSdp0';
+    
+    let supabase = null;
+    try {
+      if (typeof window.supabase !== 'undefined') {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      }
+    } catch (e) {
+      console.warn("Supabase init failed, running in local fallback offline mode:", e);
+    }
+
+    async function handleLogin() {
       const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
       const role = document.getElementById('login-role').value;
       
-      if(email) {
-        document.getElementById('login-container').classList.add('hidden');
-        document.getElementById('app-container').classList.remove('hidden');
-        document.getElementById('display-role').innerText = role;
+      const loginBtn = document.querySelector('button[onclick="handleLogin()"]');
+      if (loginBtn) loginBtn.innerText = "Authenticating...";
+
+      let authenticatedRole = role;
+      let authenticatedName = "Arjun Sharma";
+
+      if (supabase && email && password) {
+        try {
+          const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password
+          });
+
+          if (!authError && authData.user) {
+            // Fetch profile user role and name from public.users table
+            const { data: profile, error: profileError } = await supabase
+              .from('users')
+              .select('name, role')
+              .eq('id', authData.user.id)
+              .single();
+
+            if (!profileError && profile) {
+              authenticatedRole = profile.role;
+              authenticatedName = profile.name;
+              console.log("Logged in via Supabase cloud auth:", authenticatedName, authenticatedRole);
+            }
+          } else {
+            console.warn("Supabase auth failed, using local dropdown fallback:", authError?.message);
+          }
+        } catch (err) {
+          console.warn("Network error connecting to Supabase, running local offline mode:", err);
+        }
+      }
+
+      // Restore button text
+      if (loginBtn) loginBtn.innerText = "Authenticate & Decrypt Session";
+
+      document.getElementById('login-container').classList.add('hidden');
+      document.getElementById('app-container').classList.remove('hidden');
+      
+      document.getElementById('display-role').innerText = authenticatedRole;
+      document.getElementById('display-name').innerText = authenticatedName;
+      
+      const initials = authenticatedName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+      document.getElementById('display-avatar-initials').innerText = initials;
+      
+      // Filter Sidebar Menu based on Selected Role
+      const allowed = ROLE_PERMISSIONS[authenticatedRole] || ['Dashboard'];
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        const tabId = btn.id.replace('nav-', '');
+        if(allowed.includes(tabId)) {
+          btn.style.display = 'flex';
+        } else {
+          btn.style.display = 'none';
+        }
+      });
+
+      // Filter Content Blocks based on Selected Role
+      document.querySelectorAll('.role-content').forEach(el => {
+        const isRoleSpecific = el.classList.contains(authenticatedRole.toLowerCase().replace(' ', '-') + '-only');
+        const isAdminContent = el.classList.contains('admin-only');
+        const isUserAdmin = ['Admin', 'Operations Team'].includes(authenticatedRole);
         
-        // Filter Sidebar Menu based on Selected Role
-        const allowed = ROLE_PERMISSIONS[role] || ['Dashboard'];
-        document.querySelectorAll('.nav-btn').forEach(btn => {
-          const tabId = btn.id.replace('nav-', '');
-          if(allowed.includes(tabId)) {
-            btn.style.display = 'flex';
-          } else {
-            btn.style.display = 'none';
-          }
-        });
+        if(isRoleSpecific || (isAdminContent && isUserAdmin)) {
+          el.classList.remove('hidden');
+        } else {
+          el.classList.add('hidden');
+        }
+      });
 
-        // Filter Content Blocks based on Selected Role
-        document.querySelectorAll('.role-content').forEach(el => {
-          const isRoleSpecific = el.classList.contains(role.toLowerCase().replace(' ', '-') + '-only');
-          const isAdminContent = el.classList.contains('admin-only');
-          const isUserAdmin = ['Admin', 'Operations Team'].includes(role);
-          
-          if(isRoleSpecific || (isAdminContent && isUserAdmin)) {
-            el.classList.remove('hidden');
-          } else {
-            el.classList.add('hidden');
-          }
-        });
+      // Auto-route to the first permitted view tab
+      switchTab(allowed[0]);
 
-        // Auto-route to the first permitted view tab
-        switchTab(allowed[0]);
+      // Fetch dynamic service tickets if technician is logged in
+      if (authenticatedRole === 'Technician') {
+        loadTechnicianServiceTickets();
+        setupRealtimeServiceTickets();
       }
     }
 
     function handleLogout() {
       document.getElementById('login-container').classList.remove('hidden');
       document.getElementById('app-container').classList.add('hidden');
+    }
+
+    // --- DRIVER: BOOK SERVICE ---
+    async function submitDriverServiceTicket() {
+      const desc = document.getElementById('driver-issue-desc').value.trim();
+      const priority = document.getElementById('driver-issue-priority').value;
+      const statusEl = document.getElementById('driver-booking-status');
+
+      if (!desc) {
+        alert("Please enter a description of the issue.");
+        return;
+      }
+
+      statusEl.classList.remove('hidden', 'text-error', 'text-secondary');
+      statusEl.classList.add('text-primary');
+      statusEl.innerText = "Submitting request to Supabase...";
+
+      const ticketNum = 'TKT-' + Math.floor(1000 + Math.random() * 9000);
+      const ticketData = {
+        ticket_number: ticketNum,
+        vehicle_reg: 'IV-9022-X',
+        issue_description: desc,
+        priority: priority,
+        status: 'Open'
+      };
+
+      if (supabase) {
+        try {
+          const { error } = await supabase.from('service_tickets').insert([ticketData]);
+          if (!error) {
+            statusEl.classList.replace('text-primary', 'text-secondary');
+            statusEl.innerText = `Success! Logged ticket ${ticketNum} in Supabase cloud.`;
+            document.getElementById('driver-issue-desc').value = '';
+          } else {
+            console.error("Supabase insert error:", error);
+            statusEl.classList.replace('text-primary', 'text-error');
+            statusEl.innerText = `Error: ${error.message}`;
+          }
+        } catch (e) {
+          statusEl.classList.replace('text-primary', 'text-error');
+          statusEl.innerText = "Connection error. Logged locally.";
+        }
+      } else {
+        statusEl.classList.replace('text-primary', 'text-secondary');
+        statusEl.innerText = `Offline: Logged ticket ${ticketNum} locally.`;
+        document.getElementById('driver-issue-desc').value = '';
+      }
+    }
+
+    // --- TECHNICIAN: LOAD & ACCEPT SERVICE TICKETS ---
+    async function loadTechnicianServiceTickets() {
+      if (!supabase) {
+        renderTechTicketsMock();
+        return;
+      }
+
+      try {
+        const { data: tickets, error } = await supabase.from('service_tickets').select('*');
+        if (error) {
+          console.warn("Failed to fetch tickets from Supabase, loading fallback mock:", error);
+          renderTechTicketsMock();
+          return;
+        }
+
+        const activeContainer = document.getElementById('tech-active-ticket-container');
+        const poolContainer = document.getElementById('tech-open-pool-container');
+
+        activeContainer.innerHTML = '';
+        poolContainer.innerHTML = '';
+
+        const activeTickets = tickets.filter(t => t.status === 'In Progress' && t.assigned_technician === 'Sunit Malhotra');
+        const openTickets = tickets.filter(t => t.status === 'Open' || !t.assigned_technician);
+
+        // Render Active Assignments
+        if (activeTickets.length === 0) {
+          activeContainer.innerHTML = `
+            <div class="glass-card p-6 rounded-xl text-center">
+              <p class="text-xs text-on-surface-variant">No active service assignments. Accept a job from the pool to begin.</p>
+            </div>`;
+        } else {
+          activeTickets.forEach(t => {
+            activeContainer.innerHTML += `
+              <div class="glass-card p-6 rounded-xl space-y-4 border border-primary/20">
+                <div class="flex justify-between items-center border-b border-white/5 pb-2">
+                  <div>
+                    <span class="text-xs text-primary font-mono font-bold">${t.ticket_number}</span>
+                    <h4 class="font-bold text-sm mt-0.5">${t.vehicle_reg}</h4>
+                  </div>
+                  <span class="badge ${t.priority === 'Critical' ? 'badge-red' : 'badge-blue'}">${t.priority}</span>
+                </div>
+                <p class="text-xs text-on-surface">${t.issue_description}</p>
+                <div class="pt-2 border-t border-white/5 flex justify-end">
+                  <button onclick="closeServiceTicket('${t.id}')" class="px-3 py-1.5 bg-secondary text-background font-bold text-xs rounded hover:opacity-90">
+                    Close Service Ticket
+                  </button>
+                </div>
+              </div>`;
+          });
+        }
+
+        // Render Open Pool
+        if (openTickets.length === 0) {
+          poolContainer.innerHTML = `
+            <div class="glass-card p-6 rounded-xl text-center">
+              <p class="text-xs text-on-surface-variant">No open service requests in pool.</p>
+            </div>`;
+        } else {
+          openTickets.forEach(t => {
+            poolContainer.innerHTML += `
+              <div class="glass-card p-5 rounded-xl space-y-3 hover:border-secondary/20 border border-transparent transition-all">
+                <div class="flex justify-between items-center">
+                  <span class="text-xs text-on-surface-variant font-mono">${t.ticket_number}</span>
+                  <span class="badge ${t.priority === 'Critical' ? 'badge-red' : 'badge-blue'}">${t.priority}</span>
+                </div>
+                <h4 class="font-bold text-sm text-primary">${t.vehicle_reg}</h4>
+                <p class="text-xs text-on-surface-variant">${t.issue_description}</p>
+                <button onclick="acceptServiceTicket('${t.id}')" class="w-full py-1.5 bg-surface-container hover:bg-surface-container-high rounded text-xs font-bold text-secondary">
+                  Accept Job / Assign to Me
+                </button>
+              </div>`;
+          });
+        }
+      } catch (e) {
+        console.error("Error loading tickets:", e);
+        renderTechTicketsMock();
+      }
+    }
+
+    async function acceptServiceTicket(ticketId) {
+      if (supabase) {
+        try {
+          const { error } = await supabase
+            .from('service_tickets')
+            .update({ status: 'In Progress', assigned_technician: 'Sunit Malhotra' })
+            .eq('id', ticketId);
+
+          if (error) {
+            console.error("Supabase update error:", error);
+            alert("Could not accept ticket: " + error.message);
+          } else {
+            loadTechnicianServiceTickets();
+          }
+        } catch (e) {
+          console.error("Network error accepting ticket:", e);
+        }
+      }
+    }
+
+    async function closeServiceTicket(ticketId) {
+      if (supabase) {
+        try {
+          const { error } = await supabase
+            .from('service_tickets')
+            .update({ status: 'Closed' })
+            .eq('id', ticketId);
+
+          if (error) {
+            console.error("Supabase update error:", error);
+          } else {
+            loadTechnicianServiceTickets();
+          }
+        } catch (e) {
+          console.error("Network error closing ticket:", e);
+        }
+      }
+    }
+
+    function renderTechTicketsMock() {
+      const activeContainer = document.getElementById('tech-active-ticket-container');
+      const poolContainer = document.getElementById('tech-open-pool-container');
+      
+      activeContainer.innerHTML = `
+        <div class="glass-card p-6 rounded-xl space-y-4">
+          <div class="flex justify-between items-center border-b border-white/5 pb-3">
+            <div>
+              <span class="text-xs text-error font-mono font-bold">ASSIGNED ORDER: TKT-8842</span>
+              <h4 class="font-bold text-base mt-1">IV-7722-M (Tata Tigor EV)</h4>
+            </div>
+            <span class="badge badge-red">Critical</span>
+          </div>
+          <p class="text-xs text-on-surface-variant">Overheating under load & warning lights on dashboard</p>
+        </div>`;
+        
+      poolContainer.innerHTML = `
+        <div class="glass-card p-6 rounded-xl text-center">
+          <p class="text-xs text-on-surface-variant">Offline Mode: No open service requests in pool.</p>
+        </div>`;
+    }
+
+    function setupRealtimeServiceTickets() {
+      if (!supabase) return;
+      supabase
+        .channel('public:service_tickets')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'service_tickets' }, () => {
+          loadTechnicianServiceTickets();
+        })
+        .subscribe();
+    }hidden');
     }
 
     function switchTab(tabId) {
