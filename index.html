@@ -183,6 +183,8 @@
           </select>
         </div>
 
+        <div id="login-error-msg" class="hidden p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-xs text-red-500 font-medium mb-4 text-center"></div>
+
         <button onclick="handleLogin()" class="w-full py-3.5 bg-gradient-to-r from-primary-container to-secondary-container hover:brightness-110 text-background font-bold rounded-lg text-sm shadow-lg transition-all">
           Authenticate & Decrypt Session
         </button>
@@ -281,6 +283,10 @@
           <span class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-high border border-white/5 text-xs text-on-surface-variant">
             <span class="w-2 h-2 rounded-full bg-secondary pulse-glow-teal"></span>
             Connected
+          </span>
+          <span id="db-status-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-high border border-white/5 text-xs text-on-surface-variant">
+            <span id="db-status-dot" class="w-2 h-2 rounded-full bg-red-500"></span>
+            <span id="db-status-text">Database: Offline</span>
           </span>
         </div>
 
@@ -821,6 +827,14 @@
     try {
       if (typeof window.supabase !== 'undefined') {
         supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        setTimeout(() => {
+          const dot = document.getElementById('db-status-dot');
+          const text = document.getElementById('db-status-text');
+          if (dot && text) {
+            dot.className = "w-2 h-2 rounded-full bg-green-500 animate-pulse";
+            text.innerText = "Database: Live (Supabase)";
+          }
+        }, 300);
       }
     } catch (e) {
       console.warn("Supabase init failed, running in local fallback offline mode:", e);
@@ -858,7 +872,13 @@
               console.log("Logged in via Supabase cloud auth:", authenticatedName, authenticatedRole);
             }
           } else {
-            console.warn("Supabase auth failed, using local dropdown fallback:", authError?.message);
+            console.warn("Supabase auth failed, showing warning overlay:", authError?.message);
+            const errorMsgEl = document.getElementById('login-error-msg');
+            if (errorMsgEl) {
+              errorMsgEl.classList.remove('hidden');
+              errorMsgEl.innerText = `Supabase Auth Failed: ${authError?.message || 'Invalid Credentials'}. Running in offline fallback mode...`;
+              setTimeout(() => { errorMsgEl.classList.add('hidden'); }, 4000);
+            }
           }
         } catch (err) {
           console.warn("Network error connecting to Supabase, running local offline mode:", err);
