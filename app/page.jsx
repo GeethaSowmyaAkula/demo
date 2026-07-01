@@ -27,16 +27,12 @@ const DRIVER_DATA = [
 ];
 
 const SERVICE_TICKETS = [
-  { id: 'TKT-8842', vehicle: 'IV-7722-M', issue: 'Overheating under load & warning lights on dashboard', priority: 'Critical', technician: 'Sunit Malhotra', status: 'In Progress', warranty: 'Under Warranty', date: '2026-06-30' },
-  { id: 'TKT-8843', vehicle: 'IV-4401-B', issue: 'Cell balance voltage variance exceeds safe threshold (45mV)', priority: 'High', technician: 'Rohan Deshmukh', status: 'Diagnosed', warranty: 'Claim Pending', date: '2026-06-30' },
-  { id: 'TKT-8844', vehicle: 'IV-2311-L', issue: 'Periodic GPS signal drops & connectivity interruption', priority: 'Medium', technician: 'Amit Mishra', status: 'Open', warranty: 'Out of Warranty', date: '2026-06-29' }
+  { id: 't1', ticket_number: 'TKT-8842', vehicle_reg: 'IV-7722-M', issue_description: 'Overheating under load & warning lights on dashboard', priority: 'Critical', assigned_technician: 'Sunit Malhotra', status: 'In Progress' },
+  { id: 't2', ticket_number: 'TKT-8843', vehicle_reg: 'IV-4401-B', issue_description: 'Cell balance voltage variance exceeds safe threshold (45mV)', priority: 'High', assigned_technician: 'Rohan Deshmukh', status: 'Diagnosed' },
+  { id: 't3', ticket_number: 'TKT-8844', vehicle_reg: 'IV-2311-L', issue_description: 'Periodic GPS signal drops & connectivity interruption', priority: 'Medium', assigned_technician: 'Amit Mishra', status: 'Open' }
 ];
 
-const TECHNICIANS = [
-  { id: 'TECH-01', name: 'Sunit Malhotra', skills: ['High Voltage Systems', 'Battery Swapping', 'BMS Calibration'], experience: '5 Yrs', status: 'On-Site', activeTickets: 2, workload: 85, rating: 4.8 },
-  { id: 'TECH-02', name: 'Rohan Deshmukh', skills: ['Controller Re-flashing', 'PMSM Diagnostics'], experience: '3 Yrs', status: 'Available', activeTickets: 1, workload: 40, rating: 4.5 },
-  { id: 'TECH-03', name: 'Amit Mishra', skills: ['Telemetry Installation', 'General Wiring'], experience: '2 Yrs', status: 'Available', activeTickets: 1, workload: 30, rating: 4.2 }
-];
+
 
 const PARTS_INVENTORY = [
   { id: 'INV-082', code: 'LFP-72-100', name: 'LFP 72V 100Ah Battery Module', category: 'Battery', stock: 12, min: 15, supplier: 'Amara Raja Batteries', price: 92000, status: 'Low Stock' },
@@ -55,8 +51,6 @@ const ERP_INVOICES = [
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loginRole, setLoginRole] = useState('Admin');
-  const [loginEmail, setLoginEmail] = useState('admin@innovibe.in');
-  const [loginPassword, setLoginPassword] = useState('password123');
   const [activeTab, setActiveTab] = useState('Dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -1161,9 +1155,7 @@ export default function App() {
                         </h3>
                         <div className="space-y-4">
                           {(() => {
-                            const activeTickets = (serviceTickets.length > 0 ? serviceTickets : [
-                              { id: 'mock-active', ticket_number: 'TKT-8842', vehicle_reg: 'IV-7722-M', issue_description: 'Overheating under load & warning lights on dashboard', priority: 'Critical', status: 'In Progress', assigned_technician: 'Sunit Malhotra' }
-                            ]).filter(t => t.status === 'In Progress' && t.assigned_technician === 'Sunit Malhotra');
+                            const activeTickets = (serviceTickets.length > 0 ? serviceTickets : SERVICE_TICKETS).filter(t => t.status === 'In Progress' && t.assigned_technician === 'Sunit Malhotra');
 
                             if (activeTickets.length === 0) {
                               return (
@@ -1205,7 +1197,7 @@ export default function App() {
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {(() => {
-                            const openTickets = (serviceTickets.length > 0 ? serviceTickets : []).filter(t => t.status === 'Open' || !t.assigned_technician);
+                            const openTickets = (serviceTickets.length > 0 ? serviceTickets : SERVICE_TICKETS).filter(t => t.status === 'Open' || !t.assigned_technician);
 
                             if (openTickets.length === 0) {
                               return (
@@ -1246,11 +1238,7 @@ export default function App() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      {(serviceTickets.length > 0 ? serviceTickets : [
-                        { id: 't1', ticket_number: 'TKT-8842', vehicle_reg: 'IV-7722-M', issue_description: 'Overheating under load & warning lights on dashboard', priority: 'Critical', assigned_technician: 'Sunit Malhotra', status: 'In Progress' },
-                        { id: 't2', ticket_number: 'TKT-8843', vehicle_reg: 'IV-4401-B', issue_description: 'Cell balance voltage variance exceeds safe threshold (45mV)', priority: 'High', assigned_technician: 'Rohan Deshmukh', status: 'Diagnosed' },
-                        { id: 't3', ticket_number: 'TKT-8844', vehicle_reg: 'IV-2311-L', issue_description: 'Periodic GPS signal drops & connectivity interruption', priority: 'Medium', assigned_technician: 'Amit Mishra', status: 'Open' }
-                      ]).map(t => (
+                      {(serviceTickets.length > 0 ? serviceTickets : SERVICE_TICKETS).map(t => (
                         <div key={t.id} className="glass-card p-5 rounded-xl border border-white/5 space-y-4">
                           <div className="flex justify-between items-center">
                             <span className="text-xs font-mono font-bold text-primary">{t.ticket_number}</span>
