@@ -10,6 +10,8 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+  <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -340,21 +342,7 @@
                 <h4 class="font-bold text-sm">Real-time Telemetry Overlay</h4>
                 <span class="text-xs text-on-surface-variant">Live coordinate pins</span>
               </div>
-              <div class="flex-1 bg-surface-container-low rounded-lg border border-white/5 relative overflow-hidden">
-                <div class="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px] opacity-40"></div>
-                <div class="absolute top-[25%] left-[50%] flex flex-col items-center">
-                  <div class="w-8 h-8 rounded-full bg-primary/20 border border-primary flex items-center justify-center text-[10px] font-bold text-primary animate-pulse">124</div>
-                  <span class="text-[9px] uppercase tracking-wider text-on-surface-variant mt-1 font-bold">Delhi NCR</span>
-                </div>
-                <div class="absolute bottom-[30%] left-[45%] flex flex-col items-center">
-                  <div class="w-10 h-10 rounded-full bg-secondary/20 border border-secondary flex items-center justify-center text-[10px] font-bold text-secondary animate-pulse">288</div>
-                  <span class="text-[9px] uppercase tracking-wider text-on-surface-variant mt-1 font-bold">Mumbai Hub</span>
-                </div>
-                <div class="absolute bottom-[20%] right-[30%] flex flex-col items-center">
-                  <div class="w-9 h-9 rounded-full bg-primary/20 border border-primary flex items-center justify-center text-[10px] font-bold text-primary animate-pulse">215</div>
-                  <span class="text-[9px] uppercase tracking-wider text-on-surface-variant mt-1 font-bold">Bangalore</span>
-                </div>
-              </div>
+              <div id="dashboard-map" class="flex-1 rounded-lg border border-white/5 relative overflow-hidden h-full bg-slate-955"></div>
             </div>
 
             <div class="glass-card p-6 rounded-xl flex flex-col h-[400px]">
@@ -664,10 +652,11 @@
         <!-- GEOFENCE TAB -->
         <section id="view-Geofencing" class="view-pane hidden space-y-6">
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="lg:col-span-2 glass-card p-6 rounded-xl h-[360px] flex items-center justify-center bg-surface-container-low border border-white/5 relative">
-              <div class="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px] opacity-40"></div>
-              <div class="w-[120px] h-[120px] rounded-full border-2 border-secondary/40 bg-secondary/10 flex items-center justify-center absolute left-[30%]">
-                <span class="text-[10px] text-secondary font-bold">Mumbai Depot (Radius: 500m)</span>
+            <div id="geofencing-map" class="lg:col-span-2 rounded-xl border border-white/5 relative overflow-hidden h-[400px] bg-slate-950"></div>
+            <div class="glass-card p-6 rounded-xl space-y-4">
+              <h4 class="font-bold text-sm">Configured Boundaries</h4>
+              <div id="geofence-list" class="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+                <!-- Injected dynamically via JS -->
               </div>
             </div>
           </div>
@@ -936,6 +925,7 @@
     // Call on load
     window.addEventListener('DOMContentLoaded', () => {
       setTimeout(updateGroqUIStatus, 500);
+      setTimeout(initLeafletMaps, 800);
     });
 
     async function handleLogin() {
@@ -1281,7 +1271,244 @@
       
       // Update header title
       document.getElementById('page-title').innerText = tabId + ' Monitor';
+
+      // Invalidate map size on tab switch to prevent grey rendering bug
+      setTimeout(() => {
+        initLeafletMaps();
+        if (tabId === 'Dashboard' && dashboardMap) {
+          dashboardMap.invalidateSize();
+        }
+        if (tabId === 'Geofencing' && geofencingMap) {
+          geofencingMap.invalidateSize();
+        }
+      }, 100);
     }
+
+    let dashboardMap = null;
+    let geofencingMap = null;
+    let vehicleMarkers = {};
+    let geofenceLayers = {};
+    let geofencesData = [
+      { id: '1', name: 'Mumbai Airport Depot', type: 'circle', center: [19.0760, 72.8777], radius: 2000, inside: 4, violations: 0 },
+      { id: '2', name: 'Noida Industrial Corridor', type: 'circle', center: [28.5355, 77.3910], radius: 3000, inside: 2, violations: 3 }
+    ];
+
+    const initialVehicles = [
+      { id: 'IV-9022-X', model: 'Tata Nexon EV Max', status: 'Active', soc: 72, soh: 92, speed: 45, driver: 'Rajesh Kumar', lat: 19.0760, lng: 72.8777 },
+      { id: 'IV-1144-Z', model: 'Ola S1 Pro Gen 2', status: 'Charging', soc: 88, soh: 94, speed: 0, driver: 'Priya Sharma', lat: 28.6139, lng: 77.2090 },
+      { id: 'IV-4401-B', model: 'Ather 450X Gen 3', status: 'Idle', soc: 56, soh: 88, speed: 0, driver: 'Mohammed Ali', lat: 12.9716, lng: 77.5946 },
+      { id: 'IV-7722-M', model: 'Tata Tigor EV', status: 'Maintenance', soc: 12, soh: 78, speed: 0, driver: 'Sunit Patil', lat: 28.5355, lng: 77.3910 },
+      { id: 'IV-8834-K', model: 'Mahindra Treo', status: 'Active', soc: 64, soh: 86, speed: 32, driver: 'Anita Rao', lat: 17.3850, lng: 78.4867 },
+      { id: 'IV-2311-L', model: 'BYD E6', status: 'Offline', soc: 40, soh: 90, speed: 0, driver: 'Deepak Mehta', lat: 13.0827, lng: 80.2707 }
+    ];
+
+    function createEVIconHTML(status) {
+      const colors = {
+        Active: '#10b981',
+        Charging: '#6366f1',
+        Idle: '#94a3b8',
+        Maintenance: '#eab308',
+        Offline: '#ef4444',
+        Alert: '#f97316'
+      };
+      const color = colors[status] || '#10b981';
+      return `
+        <div class="relative flex items-center justify-center w-8 h-8">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-35" style="background-color: ${color}"></span>
+          <div class="relative w-6 h-6 rounded-full flex items-center justify-center border-2 border-white shadow-lg text-white font-black text-[10px]" style="background-color: ${color}">
+            ⚡
+          </div>
+        </div>
+      `;
+    }
+
+    function initLeafletMaps() {
+      // 1. Dashboard Map
+      const dbMapEl = document.getElementById('dashboard-map');
+      if (dbMapEl && !dashboardMap) {
+        dashboardMap = L.map('dashboard-map').setView([20.5937, 78.9629], 5);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+          attribution: '&copy; OpenStreetMap'
+        }).addTo(dashboardMap);
+
+        // Add Hubs & Service Centers
+        const chargingIcon = L.divIcon({
+          className: 'custom-hub-icon',
+          html: `<div class="w-7 h-7 rounded-full bg-emerald-600 border-2 border-white flex items-center justify-center text-white shadow-md text-xs font-bold">🔌</div>`,
+          iconSize: [28, 28]
+        });
+        const serviceIcon = L.divIcon({
+          className: 'custom-service-icon',
+          html: `<div class="w-7 h-7 rounded-full bg-amber-500 border-2 border-white flex items-center justify-center text-white shadow-md text-xs font-bold">🔧</div>`,
+          iconSize: [28, 28]
+        });
+
+        L.marker([28.5355, 77.3910], {icon: chargingIcon}).addTo(dashboardMap).bindPopup("Noida Charging Hub");
+        L.marker([28.6139, 77.2090], {icon: chargingIcon}).addTo(dashboardMap).bindPopup("Delhi Charging Hub");
+        L.marker([19.0760, 72.8777], {icon: chargingIcon}).addTo(dashboardMap).bindPopup("Mumbai Charging Hub");
+        L.marker([28.5355, 77.3910], {icon: serviceIcon}).addTo(dashboardMap).bindPopup("Noida Repair Center");
+
+        // Add Vehicles
+        initialVehicles.forEach(v => {
+          const marker = L.marker([v.lat, v.lng], {
+            icon: L.divIcon({
+              className: 'custom-ev-icon',
+              html: createEVIconHTML(v.status),
+              iconSize: [32, 32]
+            })
+          }).addTo(dashboardMap).bindPopup(`
+            <div class="text-xs space-y-1 text-slate-800">
+              <h4 class="font-bold text-slate-900">${v.id} (${v.model})</h4>
+              <p>Status: ${v.status}</p>
+              <p>SoC: ${v.soc}% | SoH: ${v.soh}%</p>
+              <p>Speed: ${v.speed} km/h</p>
+            </div>
+          `);
+          vehicleMarkers[v.id] = marker;
+        });
+
+        // Add heatmaps simulation
+        initialVehicles.forEach(v => {
+          L.circle([v.lat, v.lng], {
+            color: '#f97316',
+            fillColor: '#f97316',
+            fillOpacity: 0.08,
+            radius: 80000,
+            stroke: false
+          }).addTo(dashboardMap);
+        });
+      }
+
+      // 2. Geofencing Map
+      const gfMapEl = document.getElementById('geofencing-map');
+      if (gfMapEl && !geofencingMap) {
+        geofencingMap = L.map('geofencing-map').setView([20.5937, 78.9629], 5);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+          attribution: '&copy; OpenStreetMap'
+        }).addTo(geofencingMap);
+
+        // FeatureGroup to hold drawn shapes
+        const drawnItems = new L.FeatureGroup();
+        geofencingMap.addLayer(drawnItems);
+
+        // Add default geofences
+        geofencesData.forEach(g => {
+          const circle = L.circle(g.center, {
+            radius: g.radius,
+            color: '#10b981',
+            fillOpacity: 0.1
+          }).addTo(geofencingMap);
+          drawnItems.addLayer(circle);
+          geofenceLayers[g.id] = circle;
+        });
+
+        // Initialize draw control
+        const drawControl = new L.Control.Draw({
+          edit: {
+            featureGroup: drawnItems,
+            remove: true
+          },
+          draw: {
+            polyline: false,
+            marker: false,
+            circlemarker: false,
+            circle: {
+              shapeOptions: { color: '#10b981', fillOpacity: 0.15 }
+            },
+            polygon: {
+              shapeOptions: { color: '#6366f1', fillOpacity: 0.15 }
+            },
+            rectangle: {
+              shapeOptions: { color: '#eab308', fillOpacity: 0.15 }
+            }
+          }
+        });
+        geofencingMap.addControl(drawControl);
+
+        // Draw listeners
+        geofencingMap.on(L.Draw.Event.CREATED, (e) => {
+          const layer = e.layer;
+          drawnItems.addLayer(layer);
+          const type = e.layerType;
+          const id = L.stamp(layer).toString();
+          
+          let center = [0, 0];
+          let radius = 1000;
+          if (type === 'circle') {
+            center = [layer.getLatLng().lat, layer.getLatLng().lng];
+            radius = layer.getRadius();
+          } else {
+            const bounds = layer.getBounds();
+            center = [bounds.getCenter().lat, bounds.getCenter().lng];
+          }
+
+          const newFence = {
+            id: id,
+            name: `Fence #${geofencesData.length + 1} (${type})`,
+            type: type,
+            center: center,
+            radius: radius,
+            inside: 0,
+            violations: 0
+          };
+          geofencesData.push(newFence);
+          geofenceLayers[id] = layer;
+          renderGeofencesList();
+        });
+
+        geofencingMap.on(L.Draw.Event.DELETED, (e) => {
+          const layers = e.layers;
+          layers.eachLayer((layer) => {
+            const id = L.stamp(layer).toString();
+            geofencesData = geofencesData.filter(g => g.id !== id);
+            delete geofenceLayers[id];
+          });
+          renderGeofencesList();
+        });
+
+        renderGeofencesList();
+      }
+    }
+
+    function renderGeofencesList() {
+      const container = document.getElementById('geofence-list');
+      if (!container) return;
+      container.innerHTML = geofencesData.map(g => `
+        <div class="p-3 bg-surface-container/50 border border-white/5 rounded-lg flex flex-col justify-between">
+          <h5 class="text-xs font-bold text-primary">${g.name}</h5>
+          <div class="flex justify-between text-[10px] text-on-surface-variant mt-2">
+            <span>Type: ${g.type}</span>
+            <span>Vehicles inside: ${g.inside}</span>
+          </div>
+          <div class="flex justify-between text-[10px] text-error mt-1 font-bold">
+            <span>Violations today: ${g.violations}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Set interval to simulate live updates
+    setInterval(() => {
+      initialVehicles.forEach(v => {
+        if (v.status === 'Active') {
+          v.lat += (Math.random() - 0.5) * 0.005;
+          v.lng += (Math.random() - 0.5) * 0.005;
+          v.speed = Math.floor(30 + Math.random() * 40);
+          
+          if (vehicleMarkers[v.id]) {
+            vehicleMarkers[v.id].setLatLng([v.lat, v.lng]);
+            vehicleMarkers[v.id].getPopup().setContent(`
+              <div class="text-xs space-y-1 text-slate-800">
+                <h4 class="font-bold text-slate-900">${v.id} (${v.model})</h4>
+                <p>Status: ${v.status}</p>
+                <p>SoC: ${v.soc}% | SoH: ${v.soh}%</p>
+                <p>Speed: ${v.speed} km/h</p>
+              </div>
+            `);
+          }
+        }
+      });
+    }, 2000);
 
     function sendChatMessage() {
       const input = document.getElementById('chat-input');

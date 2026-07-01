@@ -1,7 +1,18 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
+import dynamic from 'next/dynamic';
+import { io } from 'socket.io-client';
 import { createClient } from '@supabase/supabase-js';
+
+const TelemetryMap = dynamic(() => import('./components/TelemetryMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full flex items-center justify-center bg-slate-900 text-xs text-on-surface-variant rounded-xl border border-white/10">
+      Loading OpenStreetMap layers...
+    </div>
+  )
+});
 
 const SUPABASE_URL = 'https://pttylnbkpiyuwayugkqq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB0dHlsbmJrcGl5dXdheXVna3FxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4ODAzOTEsImV4cCI6MjA5ODQ1NjM5MX0.5GamNh1J-um-vdWlzgdhujyv3XGlsru1BFL2jXOSdp0';
@@ -58,12 +69,12 @@ const fetchGroqChatCompletion = async (messages) => {
 // REALISTIC MOCK DATA FOR ENTERPRISE SAAS PLAYGROUND
 // -------------------------------------------------------------
 const VEHICLE_DATA = [
-  { id: 'IV-9022-X', model: 'Tata Nexon EV Max', type: 'SUV', driver: 'Rajesh Kumar', status: 'Active', soc: 72, soh: 92, temp: 34, speed: 45, dist: 1420, fault: 'None', batteryId: 'B-LFP-092A', firmware: 'v2.4.1', owner: 'Innovibe Leases Ltd', location: 'Mumbai Western Express Hwy', signal: 95 },
-  { id: 'IV-1144-Z', model: 'Ola S1 Pro Gen 2', type: '2-Wheeler', driver: 'Priya Sharma', status: 'Charging', soc: 88, soh: 94, temp: 38, speed: 0, dist: 840, fault: 'None', batteryId: 'B-NMC-114B', firmware: 'v2.4.0', owner: 'Logistics Partners Pvt', location: 'Delhi Sector 62 Hub', signal: 98 },
-  { id: 'IV-4401-B', model: 'Ather 450X Gen 3', type: '2-Wheeler', driver: 'Mohammed Ali', status: 'Idle', soc: 56, soh: 88, temp: 31, speed: 0, dist: 1105, fault: 'Slight Cell Imbalance', batteryId: 'B-NMC-440C', firmware: 'v2.3.9', owner: 'A1 Delivery Fleet', location: 'Bangalore Indiranagar', signal: 90 },
-  { id: 'IV-7722-M', model: 'Tata Tigor EV', type: 'Sedan', driver: 'Sunit Patil', status: 'Maintenance', soc: 12, soh: 78, temp: 46, speed: 0, dist: 2840, fault: 'High Thermal Runaway Risk', batteryId: 'B-LFP-772D', firmware: 'v2.4.1', owner: 'Stitch Logistics Delhi', location: 'Noida Repair Center', signal: 85 },
-  { id: 'IV-8834-K', model: 'Mahindra Treo', type: '3-Wheeler', driver: 'Anita Rao', status: 'Active', soc: 64, soh: 86, temp: 33, speed: 32, dist: 980, fault: 'None', batteryId: 'B-LFP-883E', firmware: 'v1.8.2', owner: 'Green City E-Rickshaws', location: 'Hyderabad Gachibowli', signal: 92 },
-  { id: 'IV-2311-L', model: 'BYD E6', type: 'MPV', driver: 'Deepak Mehta', status: 'Offline', soc: 40, soh: 90, temp: 28, speed: 0, dist: 4320, fault: 'None', batteryId: 'B-LFP-231F', firmware: 'v2.5.0', owner: 'Executive Cabs India', location: 'Chennai Airport parking', signal: 0 }
+  { id: 'IV-9022-X', model: 'Tata Nexon EV Max', type: 'SUV', driver: 'Rajesh Kumar', status: 'Active', soc: 72, soh: 92, temp: 34, speed: 45, dist: 1420, fault: 'None', batteryId: 'B-LFP-092A', firmware: 'v2.4.1', owner: 'Innovibe Leases Ltd', location: 'Mumbai Western Express Hwy', signal: 95, lat: 19.0760, lng: 72.8777 },
+  { id: 'IV-1144-Z', model: 'Ola S1 Pro Gen 2', type: '2-Wheeler', driver: 'Priya Sharma', status: 'Charging', soc: 88, soh: 94, temp: 38, speed: 0, dist: 840, fault: 'None', batteryId: 'B-NMC-114B', firmware: 'v2.4.0', owner: 'Logistics Partners Pvt', location: 'Delhi Sector 62 Hub', signal: 98, lat: 28.6139, lng: 77.2090 },
+  { id: 'IV-4401-B', model: 'Ather 450X Gen 3', type: '2-Wheeler', driver: 'Mohammed Ali', status: 'Idle', soc: 56, soh: 88, temp: 31, speed: 0, dist: 1105, fault: 'Slight Cell Imbalance', batteryId: 'B-NMC-440C', firmware: 'v2.3.9', owner: 'A1 Delivery Fleet', location: 'Bangalore Indiranagar', signal: 90, lat: 12.9716, lng: 77.5946 },
+  { id: 'IV-7722-M', model: 'Tata Tigor EV', type: 'Sedan', driver: 'Sunit Patil', status: 'Maintenance', soc: 12, soh: 78, temp: 46, speed: 0, dist: 2840, fault: 'High Thermal Runaway Risk', batteryId: 'B-LFP-772D', firmware: 'v2.4.1', owner: 'Stitch Logistics Delhi', location: 'Noida Repair Center', signal: 85, lat: 28.5355, lng: 77.3910 },
+  { id: 'IV-8834-K', model: 'Mahindra Treo', type: '3-Wheeler', driver: 'Anita Rao', status: 'Active', soc: 64, soh: 86, temp: 33, speed: 32, dist: 980, fault: 'None', batteryId: 'B-LFP-883E', firmware: 'v1.8.2', owner: 'Green City E-Rickshaws', location: 'Hyderabad Gachibowli', signal: 92, lat: 17.3850, lng: 78.4867 },
+  { id: 'IV-2311-L', model: 'BYD E6', type: 'MPV', driver: 'Deepak Mehta', status: 'Offline', soc: 40, soh: 90, temp: 28, speed: 0, dist: 4320, fault: 'None', batteryId: 'B-LFP-231F', firmware: 'v2.5.0', owner: 'Executive Cabs India', location: 'Chennai Airport parking', signal: 0, lat: 13.0827, lng: 80.2707 }
 ];
 
 const DRIVER_DATA = [
@@ -260,10 +271,76 @@ export default function App() {
 
   // Geofence states
   const [geofences, setGeofences] = useState([
-    { id: 1, name: 'Mumbai Airport Depot', type: 'Circle', radius: '500m', inside: 4, violations: 0 },
-    { id: 2, name: 'Noida Industrial Corridor', type: 'Polygon', vertices: 5, inside: 2, violations: 3 }
+    { id: '1', name: 'Mumbai Airport Depot', type: 'circle', center: [19.0760, 72.8777], radius: 2000, inside: 4, violations: 0 },
+    { id: '2', name: 'Noida Industrial Corridor', type: 'circle', center: [28.5355, 77.3910], radius: 3000, inside: 2, violations: 3 }
   ]);
   const [showAddGeofence, setShowAddGeofence] = useState(false);
+
+  const handleGeofenceCreated = (details) => {
+    const newFence = {
+      id: details.id.toString(),
+      name: `Fence #${geofences.length + 1} (${details.type})`,
+      type: details.type,
+      center: details.center,
+      radius: details.radius,
+      coordinates: details.coordinates,
+      inside: 0,
+      violations: 0
+    };
+    setGeofences(prev => [...prev, newFence]);
+  };
+
+  const handleGeofenceEdited = (details) => {
+    setGeofences(prev => prev.map(g => {
+      if (g.id === details.id.toString()) {
+        return {
+          ...g,
+          center: details.center || g.center,
+          radius: details.radius || g.radius,
+          coordinates: details.coordinates || g.coordinates
+        };
+      }
+      return g;
+    }));
+  };
+
+  const handleGeofenceDeleted = (id) => {
+    setGeofences(prev => prev.filter(g => g.id !== id.toString()));
+  };
+
+  // Socket.IO real-time telemetry updates
+  useEffect(() => {
+    const socket = io(typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8000', {
+      transports: ['websocket'],
+      autoConnect: true
+    });
+
+    socket.on('connect', () => {
+      console.log('Socket.IO connection active for real-time telemetry overlay');
+    });
+
+    socket.on('telemetry', (update) => {
+      if (update && update.vehicleId) {
+        setVehicles(prev => prev.map(v => {
+          if (v.id === update.vehicleId) {
+            return {
+              ...v,
+              lat: update.lat ?? v.lat,
+              lng: update.lng ?? v.lng,
+              speed: update.speed ?? v.speed,
+              soc: update.soc ?? v.soc,
+              status: update.status ?? v.status
+            };
+          }
+          return v;
+        }));
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   // Real-time update loop simulator
   useEffect(() => {
@@ -274,7 +351,9 @@ export default function App() {
         if (v.status === 'Active') {
           const newSoc = Math.max(5, v.soc - (Math.random() > 0.6 ? 1 : 0));
           const newTemp = Math.min(55, v.temp + (Math.random() > 0.8 ? 1 : -1));
-          return { ...v, soc: newSoc, temp: newTemp, speed: Math.floor(25 + Math.random() * 35) };
+          const newLat = (v.lat || 19.0760) + (Math.random() - 0.5) * 0.008;
+          const newLng = (v.lng || 72.8777) + (Math.random() - 0.5) * 0.008;
+          return { ...v, soc: newSoc, temp: newTemp, speed: Math.floor(25 + Math.random() * 35), lat: newLat, lng: newLng };
         }
         if (v.status === 'Charging') {
           const newSoc = Math.min(100, v.soc + (Math.random() > 0.4 ? 1 : 0));
@@ -804,33 +883,22 @@ Be concise, operator-focused, and use markdown tables or bullet points for telem
                         </div>
                       </div>
                       
-                      {/* Leaflet/Simulated Map canvas */}
-                      <div className="flex-1 bg-surface-container-low rounded-lg border border-white/5 relative overflow-hidden flex items-center justify-center">
-                        {/* CSS-based Tech Grid Background */}
-                        <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px] opacity-40"></div>
-                        
-                        {/* Simulated map nodes */}
-                        <div className="absolute top-[25%] left-[50%] flex flex-col items-center">
-                          <div className="w-8 h-8 rounded-full bg-primary/20 border border-primary flex items-center justify-center text-[10px] font-bold text-primary animate-pulse">124</div>
-                          <span className="text-[9px] uppercase tracking-wider text-on-surface-variant mt-1">Delhi NCR</span>
-                        </div>
-
-                        <div className="absolute bottom-[30%] left-[45%] flex flex-col items-center">
-                          <div className="w-10 h-10 rounded-full bg-secondary/20 border border-secondary flex items-center justify-center text-[10px] font-bold text-secondary animate-pulse">288</div>
-                          <span className="text-[9px] uppercase tracking-wider text-on-surface-variant mt-1">Mumbai Hub</span>
-                        </div>
-
-                        <div className="absolute bottom-[20%] right-[30%] flex flex-col items-center">
-                          <div className="w-9 h-9 rounded-full bg-primary/20 border border-primary flex items-center justify-center text-[10px] font-bold text-primary animate-pulse">215</div>
-                          <span className="text-[9px] uppercase tracking-wider text-on-surface-variant mt-1">Bangalore</span>
-                        </div>
-
-                        <div className="absolute bottom-[40%] right-[25%] flex flex-col items-center">
-                          <div className="w-7 h-7 rounded-full bg-primary/20 border border-primary flex items-center justify-center text-[10px] font-bold text-primary animate-pulse">132</div>
-                          <span className="text-[9px] uppercase tracking-wider text-on-surface-variant mt-1">Hyderabad</span>
-                        </div>
-
-                        <span className="absolute bottom-4 left-4 text-[10px] text-on-surface-variant">Live telemetry visualization (India coverage map)</span>
+                      {/* Leaflet Map canvas */}
+                      <div className="flex-1 bg-surface-container-low rounded-lg border border-white/5 relative overflow-hidden">
+                        <TelemetryMap 
+                          vehicles={vehicles}
+                          chargingStations={[
+                            { id: 'h1', name: 'Noida Charging Hub', position: [28.5355, 77.3910], capacity: 20 },
+                            { id: 'h2', name: 'Delhi Charging Hub', position: [28.6139, 77.2090], capacity: 45 },
+                            { id: 'h3', name: 'Mumbai Charging Hub', position: [19.0760, 72.8777], capacity: 60 }
+                          ]}
+                          serviceCenters={[
+                            { id: 's1', name: 'Noida Repair Center', position: [28.5355, 77.3910], staff: 12, workload: 40 },
+                            { id: 's2', name: 'Mumbai Maintenance Center', position: [19.0760, 72.8777], staff: 8, workload: 15 }
+                          ]}
+                          geofences={geofences}
+                          showHeatmap={true}
+                        />
                       </div>
                     </div>
 
@@ -1441,19 +1509,15 @@ Be concise, operator-focused, and use markdown tables or bullet points for telem
                   </div>
 
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div className="lg:col-span-2 glass-card p-6 rounded-xl h-[360px] flex items-center justify-center bg-surface-container-low border border-white/5 relative">
-                      <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px] opacity-40"></div>
-                      
-                      {/* Simulated bounding boxes/polygons */}
-                      <div className="w-[120px] h-[120px] rounded-full border-2 border-secondary/40 bg-secondary/10 flex items-center justify-center absolute left-[30%]">
-                        <span className="text-[10px] text-secondary font-bold">Mumbai Depot (Radius: 500m)</span>
-                      </div>
-
-                      <div className="w-[180px] h-[100px] border-2 border-error/40 bg-error/10 flex items-center justify-center absolute right-[25%] rotate-12">
-                        <span className="text-[10px] text-error font-bold">Noida Ind Zone (Polygon)</span>
-                      </div>
-
-                      <span className="absolute bottom-4 left-4 text-[10px] text-on-surface-variant">Geographic spatial coordinates rendering</span>
+                    <div className="lg:col-span-2 glass-card p-6 rounded-xl h-[400px] relative overflow-hidden bg-surface-container-low border border-white/5">
+                      <TelemetryMap 
+                        vehicles={vehicles}
+                        geofences={geofences}
+                        enableDrawing={true}
+                        onGeofenceCreated={handleGeofenceCreated}
+                        onGeofenceEdited={handleGeofenceEdited}
+                        onGeofenceDeleted={handleGeofenceDeleted}
+                      />
                     </div>
 
                     <div className="glass-card p-6 rounded-xl space-y-4">
