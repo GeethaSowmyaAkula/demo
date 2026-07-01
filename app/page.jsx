@@ -39,11 +39,6 @@ const PARTS_INVENTORY = [
   { id: 'INV-204', code: 'BMS-MAX-V4', name: 'BMS High Voltage Controller V4', category: 'Electrical', stock: 2, min: 5, supplier: 'Exide Industries', price: 18000, status: 'Low Stock' }
 ];
 
-const CRM_CUSTOMERS = [
-  { id: 'CUST-01', company: 'A1 Delivery Logistics', type: 'Delivery Partner', fleet: 145, contact: 'Arvinder Singh', revenue: '₹42,50,000', status: 'Active' },
-  { id: 'CUST-02', company: 'Quick Cab Services', type: 'Corporate Fleet', fleet: 82, contact: 'Meera Sen', revenue: '₹28,40,000', status: 'Renewal Pending' }
-];
-
 const ERP_INVOICES = [
   { id: 'INV-2026-884', customer: 'A1 Delivery Logistics', amount: '₹4,50,000', gst: '₹81,000', total: '₹5,31,000', date: '2026-06-25', status: 'Paid' },
   { id: 'INV-2026-885', customer: 'Quick Cab Services', amount: '₹2,80,000', gst: '₹50,400', total: '₹3,30,400', date: '2026-06-28', status: 'Pending' }
@@ -135,14 +130,13 @@ export default function App() {
 
   // Role permissions mapping
   const ROLE_PERMISSIONS = {
-    'Admin': ['Dashboard', 'Fleet', 'Drivers', 'Battery', 'Service', 'Inventory', 'Geofencing', 'CRM', 'ERP', 'Copilot', 'DigitalTwin', 'Remote'],
+    'Admin': ['Dashboard', 'Fleet', 'Drivers', 'Battery', 'Service', 'Inventory', 'Geofencing', 'ERP', 'Copilot', 'DigitalTwin', 'Remote'],
     'Fleet Manager': ['Dashboard', 'Fleet', 'Drivers', 'Battery', 'Service', 'Inventory', 'Geofencing', 'Copilot', 'DigitalTwin'],
     'Driver': ['Drivers', 'Fleet', 'Copilot', 'Remote'],
     'Technician': ['Service', 'Inventory', 'Copilot', 'DigitalTwin'],
-    'Customer': ['Fleet', 'CRM', 'ERP'],
+    'Customer': ['Fleet', 'ERP'],
     'Operations Team': ['Dashboard', 'Fleet', 'Drivers', 'Service', 'Geofencing', 'Remote'],
-    'Finance Team': ['Dashboard', 'ERP'],
-    'CRM Team': ['CRM', 'Dashboard']
+    'Finance Team': ['Dashboard', 'ERP']
   };
 
   // Handle Login
@@ -283,7 +277,6 @@ export default function App() {
                   <option value="Technician">Technician Engineer</option>
                   <option value="Operations Team">Operations Desk</option>
                   <option value="Finance Team">Finance Desk</option>
-                  <option value="CRM Team">CRM Desk</option>
                 </select>
               </div>
 
@@ -390,28 +383,17 @@ export default function App() {
                 </button>
               )}
 
-              {(allowedTabs.includes('CRM') || allowedTabs.includes('ERP')) && (
-                <p className="text-[10px] font-bold text-on-surface-variant/40 uppercase tracking-widest px-3 pt-4 mb-2">Enterprise Modules</p>
-              )}
-
-              {allowedTabs.includes('CRM') && (
-                <button 
-                  onClick={() => setActiveTab('CRM')}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'CRM' ? 'bg-primary-container/20 text-primary border-l-4 border-primary' : 'text-on-surface-variant hover:bg-white/5 hover:text-on-surface'}`}
-                >
-                  <span className="material-symbols-outlined">groups</span>
-                  CRM Pipeline
-                </button>
-              )}
-
               {allowedTabs.includes('ERP') && (
-                <button 
-                  onClick={() => setActiveTab('ERP')}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'ERP' ? 'bg-primary-container/20 text-primary border-l-4 border-primary' : 'text-on-surface-variant hover:bg-white/5 hover:text-on-surface'}`}
-                >
-                  <span className="material-symbols-outlined">account_balance</span>
-                  ERP Finance
-                </button>
+                <>
+                  <p className="text-[10px] font-bold text-on-surface-variant/40 uppercase tracking-widest px-3 pt-4 mb-2">Enterprise Modules</p>
+                  <button 
+                    onClick={() => setActiveTab('ERP')}
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'ERP' ? 'bg-primary-container/20 text-primary border-l-4 border-primary' : 'text-on-surface-variant hover:bg-white/5 hover:text-on-surface'}`}
+                  >
+                    <span className="material-symbols-outlined">account_balance</span>
+                    ERP Finance
+                  </button>
+                </>
               )}
 
               {(allowedTabs.includes('Copilot') || allowedTabs.includes('DigitalTwin') || allowedTabs.includes('Remote')) && (
@@ -1132,50 +1114,7 @@ export default function App() {
                 </div>
               )}
 
-              {/* -------------------------------------------------------------
-                  TAB 8: CRM PIPELINE
-                  ------------------------------------------------------------- */}
-              {activeTab === 'CRM' && (
-                <div className="space-y-6 animate-fade-in">
-                  <div>
-                    <h4 className="font-bold text-sm">CRM customer pipeline</h4>
-                    <p className="text-xs text-on-surface-variant">Track corporate clients, active leasing contracts, and fleet expansions.</p>
-                  </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {CRM_CUSTOMERS.map(c => (
-                      <div key={c.id} className="glass-card p-5 rounded-xl border border-white/5 space-y-4">
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs text-primary font-mono">{c.id}</span>
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${c.status === 'Active' ? 'bg-secondary/20 text-secondary' : 'bg-yellow-400/20 text-yellow-400'}`}>
-                            {c.status}
-                          </span>
-                        </div>
-
-                        <div>
-                          <h3 className="font-bold text-base">{c.company}</h3>
-                          <span className="text-xs text-on-surface-variant">{c.type}</span>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-2 text-center pt-2 border-t border-white/5">
-                          <div>
-                            <span className="text-[10px] text-on-surface-variant uppercase">Fleet size</span>
-                            <p className="text-sm font-bold mt-0.5">{c.fleet}</p>
-                          </div>
-                          <div>
-                            <span className="text-[10px] text-on-surface-variant uppercase">Contact</span>
-                            <p className="text-sm font-bold mt-0.5 truncate">{c.contact.split(' ')[0]}</p>
-                          </div>
-                          <div>
-                            <span className="text-[10px] text-on-surface-variant uppercase">Contract val</span>
-                            <p className="text-sm font-bold mt-0.5">{c.revenue}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               {/* -------------------------------------------------------------
                   TAB 9: ERP FINANCE

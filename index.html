@@ -179,7 +179,6 @@
             <option value="Technician">Technician Engineer</option>
             <option value="Operations Team">Operations Desk</option>
             <option value="Finance Team">Finance Desk</option>
-            <option value="CRM Team">CRM Desk</option>
           </select>
         </div>
 
@@ -239,10 +238,6 @@
         </button>
 
         <p class="text-[10px] font-bold text-on-surface-variant/40 uppercase tracking-widest px-3 pt-4 mb-2">Enterprise Modules</p>
-        <button onclick="switchTab('CRM')" id="nav-CRM" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all text-on-surface-variant hover:bg-white/5 hover:text-on-surface">
-          <span class="material-symbols-outlined">groups</span>
-          CRM Pipeline
-        </button>
         <button onclick="switchTab('ERP')" id="nav-ERP" class="nav-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all text-on-surface-variant hover:bg-white/5 hover:text-on-surface">
           <span class="material-symbols-outlined">account_balance</span>
           ERP Finance
@@ -665,19 +660,7 @@
           </div>
         </section>
 
-        <!-- CRM TAB -->
-        <section id="view-CRM" class="view-pane hidden space-y-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="glass-card p-5 rounded-xl border border-white/5 space-y-4">
-              <h3 class="font-bold text-base">A1 Delivery Logistics</h3>
-              <p class="text-xs text-on-surface-variant">Fleet Size: 145 Units</p>
-              <div class="flex justify-between items-center pt-2 border-t border-white/5 text-xs">
-                <span>Revenue: ₹42,50,000</span>
-                <span class="badge badge-green">Active</span>
-              </div>
-            </div>
-          </div>
-        </section>
+
 
         <!-- ERP FINANCE TAB -->
         <section id="view-ERP" class="view-pane hidden space-y-6">
@@ -804,14 +787,13 @@
       ------------------------------------------------------------- -->
   <script>
     const ROLE_PERMISSIONS = {
-      'Admin': ['Dashboard', 'Fleet', 'Drivers', 'Battery', 'Service', 'Inventory', 'Geofencing', 'CRM', 'ERP', 'Copilot', 'DigitalTwin', 'Remote'],
+      'Admin': ['Dashboard', 'Fleet', 'Drivers', 'Battery', 'Service', 'Inventory', 'Geofencing', 'ERP', 'Copilot', 'DigitalTwin', 'Remote'],
       'Fleet Manager': ['Dashboard', 'Fleet', 'Drivers', 'Battery', 'Service', 'Inventory', 'Geofencing', 'Copilot', 'DigitalTwin'],
       'Driver': ['Drivers', 'Fleet', 'Copilot', 'Remote'],
       'Technician': ['Service', 'Inventory', 'Copilot', 'DigitalTwin'],
-      'Customer': ['Fleet', 'CRM', 'ERP'],
+      'Customer': ['Fleet', 'ERP'],
       'Operations Team': ['Dashboard', 'Fleet', 'Drivers', 'Service', 'Geofencing', 'Remote'],
-      'Finance Team': ['Dashboard', 'ERP'],
-      'CRM Team': ['CRM', 'Dashboard']
+      'Finance Team': ['Dashboard', 'ERP']
     };
 
     function handleLogin() {
