@@ -823,10 +823,10 @@
     const SUPABASE_URL = 'https://pttylnbkpiyuwayugkqq.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB0dHlsbmJrcGl5dXdheXVna3FxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4ODAzOTEsImV4cCI6MjA5ODQ1NjM5MX0.5GamNh1J-um-vdWlzgdhujyv3XGlsru1BFL2jXOSdp0';
     
-    let supabase = null;
+    let supabaseClient = null;
     try {
       if (typeof window.supabase !== 'undefined') {
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         setTimeout(() => {
           const dot = document.getElementById('db-status-dot');
           const text = document.getElementById('db-status-text');
@@ -862,16 +862,16 @@
       let authenticatedRole = role;
       let authenticatedName = "Arjun Sharma";
 
-      if (supabase && email) {
+      if (supabaseClient && email) {
         try {
-          const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+          const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
             email: email,
             password: password
           });
 
           if (!authError && authData.user) {
             // Fetch profile user role and name from public.users table
-            const { data: profile, error: profileError } = await supabase
+            const { data: profile, error: profileError } = await supabaseClient
               .from('users')
               .select('name, role')
               .eq('id', authData.user.id)
@@ -994,9 +994,9 @@
         status: 'Open'
       };
 
-      if (supabase) {
+      if (supabaseClient) {
         try {
-          const { error } = await supabase.from('service_tickets').insert([ticketData]);
+          const { error } = await supabaseClient.from('service_tickets').insert([ticketData]);
           if (!error) {
             statusEl.classList.replace('text-primary', 'text-secondary');
             statusEl.innerText = `Success! Logged ticket ${ticketNum} in Supabase cloud.`;
@@ -1019,13 +1019,13 @@
 
     // --- TECHNICIAN: LOAD & ACCEPT SERVICE TICKETS ---
     async function loadTechnicianServiceTickets() {
-      if (!supabase) {
+      if (!supabaseClient) {
         renderTechTicketsMock();
         return;
       }
 
       try {
-        const { data: tickets, error } = await supabase.from('service_tickets').select('*');
+        const { data: tickets, error } = await supabaseClient.from('service_tickets').select('*');
         if (error) {
           console.warn("Failed to fetch tickets from Supabase, loading fallback mock:", error);
           renderTechTicketsMock();
@@ -1097,9 +1097,9 @@
     }
 
     async function acceptServiceTicket(ticketId) {
-      if (supabase) {
+      if (supabaseClient) {
         try {
-          const { error } = await supabase
+          const { error } = await supabaseClient
             .from('service_tickets')
             .update({ status: 'In Progress', assigned_technician: 'Sunit Malhotra' })
             .eq('id', ticketId);
@@ -1117,9 +1117,9 @@
     }
 
     async function closeServiceTicket(ticketId) {
-      if (supabase) {
+      if (supabaseClient) {
         try {
-          const { error } = await supabase
+          const { error } = await supabaseClient
             .from('service_tickets')
             .update({ status: 'Closed' })
             .eq('id', ticketId);
@@ -1158,8 +1158,8 @@
     }
 
     function setupRealtimeServiceTickets() {
-      if (!supabase) return;
-      supabase
+      if (!supabaseClient) return;
+      supabaseClient
         .channel('public:service_tickets')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'service_tickets' }, () => {
           loadTechnicianServiceTickets();
